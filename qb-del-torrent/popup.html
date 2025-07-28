@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { padding: 12px; font-family: sans-serif; width: 300px; }
+    textarea, button {
+      width: 100%; margin-top: 8px; padding: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #d9534f; color: white; font-weight: bold;
+      border: none; border-radius: 4px;
+    }
+    button:hover { background-color: #c9302c; }
+  </style>
+</head>
+<body>
+  <h3>删除多个种子和文件</h3>
+  <textarea id="keywords" rows="8" placeholder="每行一个种子名称关键词"></textarea>
+  <button id="deleteBtn">⚠ 删除匹配种子和文件</button>
+  <div id="result" style="font-size:12px; margin-top:10px;"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
