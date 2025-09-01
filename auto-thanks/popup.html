@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>自动打开并感谢</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+           margin: 14px; min-width: 300px; }
+    h1 { font-size: 16px; margin: 0 0 10px; }
+    .row { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; align-items: center; }
+    button { padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; }
+    button.primary { border-color: #1677ff; }
+    button.danger { border-color: #ff4d4f; }
+    .field { display: flex; align-items: center; gap: 6px; }
+    .field label { font-size: 12px; color: #555; }
+    input[type="number"] { width: 80px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; }
+    .stats { background: #f7f7f8; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
+    .kv { display: flex; justify-content: space-between; margin: 4px 0; }
+    .muted { color: #666; font-size: 12px; }
+    .ok { color: #2f9e44; }
+    .warn { color: #d9480f; }
+  </style>
+</head>
+<body>
+  <h1>自动打开并感谢</h1>
+
+  <div class="row">
+    <div class="field">
+      <label for="startPage">起始页</label>
+      <input id="startPage" type="number" min="1" step="1" />
+    </div>
+    <div class="field">
+      <label for="endPage">结束页</label>
+      <input id="endPage" type="number" min="1" step="1" />
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="btnStart" class="primary">开始</button>
+    <button id="btnStop" class="danger">停止</button>
+    <button id="btnClear">清空日志</button>
+  </div>
+
+  <div class="stats">
+    <div class="kv"><span>状态</span><strong id="state">—</strong></div>
+    <div class="kv"><span>已打开详情</span><strong id="opened">0</strong></div>
+    <div class="kv"><span>成功说谢谢</span><strong id="thanksOk">0</strong></div>
+    <div class="kv"><span>失败说谢谢</span><strong id="thanksFail">0</strong></div>
+    <div class="kv"><span>已跳过详情</span><strong id="skipped">0</strong></div>
+    <div class="kv"><span>已处理分页</span><strong id="pages">0</strong></div>
+  </div>
+
+  <p class="muted" id="hint">请先在当前标签页打开 si-qi.xyz 的 torrents 列表页面。</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

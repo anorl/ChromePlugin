@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "自动打开并感谢",
+  "version": "1.5.0",
+  "description": "按设定的 page 范围访问 si-qi.xyz 的 torrents 列表页，依次打开每个 details.php?id=...，自动点击“说谢谢”成功后关闭；带访问日志与面板控制。",
+  "permissions": ["tabs", "scripting", "storage"],
+  "host_permissions": ["https://si-qi.xyz/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "自动打开并感谢"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
