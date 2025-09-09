@@ -79,8 +79,7 @@ function renderRecords(logs) {
   }
   emptyHint.style.display = "none";
 
-  // 最新在上
-  logs.slice().reverse().forEach(e => prependRecord(e));
+  logs.forEach(e => prependRecord(e));
 }
 
 function prependRecord(e) {
