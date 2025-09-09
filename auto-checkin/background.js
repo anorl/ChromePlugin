@@ -41,28 +41,26 @@ const TASKS = [
   {
     id: "Ourbits",
     name: "Ourbits 签到（按钮+CF等待+成功检测）",
-    url: "https://ourbits.club", 
+    url: "https://ourbits.club",
     run: async ({ budgetMs = 5000 } = {}) => {
       const url = "https://ourbits.club";
       const tab = await chrome.tabs.create({ url, active: false });
 
-      // 为了满足 5 秒总时限，这里将各阶段时间压缩
-      const phaseA = Math.min(1500, Math.max(500, Math.floor(budgetMs * 0.3)));   // 初次加载等待
-      const phaseB = Math.min(2000, Math.max(800, Math.floor(budgetMs * 0.4)));   // 等按钮
-      const phaseC = Math.max(800, budgetMs - phaseA - phaseB);                   // 等成功文案
+      const phaseA = Math.min(1500, Math.max(500, Math.floor(budgetMs * 0.3)));
+      const phaseB = Math.min(2000, Math.max(800, Math.floor(budgetMs * 0.4)));
+      const phaseC = Math.max(800, budgetMs - phaseA - phaseB);
 
       try {
-        // 阶段A：等待初步加载完成（可能仍处于CF过渡，但限时）
-        await waitTabComplete(tab.id, phaseA);
+        await softWaitTabComplete(tab.id, phaseA);
 
-        // 阶段B/C：注入页面脚本：点击“签到得魔力”，快速轮询成功字样 / 已签到
         const injectRes = await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           world: "MAIN",
           func: genericSignFlow,
           args: [{
             buttonText: "签到得魔力",
-            successTexts: ["签到成功", "今日已签到", "已签到"],
+            // ← 新增 “签到已得”
+            successTexts: ["签到成功", "今日已签到", "已签到", "签到已得"],
             loginTexts: ["请先登录", "登入", "登录"],
             maxWaitForBtnMs: phaseB,
             maxWaitForSuccessMs: phaseC,
@@ -71,23 +69,16 @@ const TASKS = [
         });
 
         const { result } = injectRes[0] || {};
-        if (!result) {
-          return { status: "failed", reason: "no_result" };
-        }
+        if (!result) return { status: "failed", reason: "no_result" };
+
+        // 只要脚本报告 ok，就记为 success（包含 already_signed 的情况）
         if (result.ok) {
-          return { status: "success" };
+          return { status: "success", reason: result.reason || "-" };
         }
-        // 已手动签到/今天签过
-        if (result.reason === "already_signed") {
-          return { status: "skipped", reason: "already_signed" };
-        }
-        if (result.reason === "button_not_found") {
-          return { status: "timeout", reason: "button_not_found" };
-        }
-        if (result.reason === "success_text_timeout") {
-          return { status: "timeout", reason: "success_text_timeout" };
-        }
-        if (result.reason === "need_login" || result.reason === "logged_out_midway") {
+
+        if (result.reason === "button_not_found")   return { status: "timeout", reason: "button_not_found" };
+        if (result.reason === "success_text_timeout") return { status: "timeout", reason: "success_text_timeout" };
+        if (["need_login", "logged_out_midway"].includes(result.reason)) {
           return { status: "failed", reason: result.reason };
         }
         return { status: "failed", reason: result.reason || "unknown" };
@@ -112,7 +103,7 @@ const TASKS = [
       const phaseC = Math.max(800, budgetMs - phaseA - phaseB);                   // 等成功文案
 
       try {
-        await waitTabComplete(tab.id, phaseA);
+        await softWaitTabComplete(tab.id, phaseA);
         const injectRes = await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           world: "MAIN",
@@ -120,7 +111,7 @@ const TASKS = [
           args: [{
             buttonText: "签到得爆米花",
             // 更稳健：多放几个可能的成功文案
-            successTexts: ["签到成功", "今日已签到", "已签到", "领取成功", "今日已领取", "已领取", "获得爆米花"],
+            successTexts: ["签到成功", "今日已签到", "已签到", "领取成功", "今日已领取", "已领取", "获得爆米花","签到已得"],
             loginTexts: ["请先登录", "登入", "登录"],
             maxWaitForBtnMs: phaseB,
             maxWaitForSuccessMs: phaseC,
@@ -356,6 +347,11 @@ function nextTime(hour, minute) {
   t.setHours(hour, minute, 0, 0);
   if (t <= now) t.setDate(t.getDate() + 1);
   return t.getTime();
+}
+
+// 软等待：到达 timeout 就算了，不抛错，后续继续走点击&轮询
+async function softWaitTabComplete(tabId, timeoutMs) {
+  try { await waitTabComplete(tabId, timeoutMs); } catch (e) { /* ignore */ }
 }
 
 // ====== 标签页完成等待 ======
