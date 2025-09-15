@@ -103,7 +103,7 @@ function waitForTabLoad(tabId) {
   });
 }
 
-// 在详情页执行“点击说谢谢”，并根据“按钮含有【感谢】【成功】”来判定成功
+// 在详情页执行“点击说谢谢”，并更稳健地判定【成功 / 跳过】
 async function thankOnDetailTab(tabId) {
   const [{ result }] = await chrome.scripting.executeScript({
     target: { tabId },
@@ -112,57 +112,93 @@ async function thankOnDetailTab(tabId) {
       const url = new URL(location.href);
       const id = url.searchParams.get("id");
 
-      const host = document.querySelector("#thanksbutton") || document.body;
-      const btn  = document.querySelector("#saythanks") || document.querySelector("#thanksbutton input[type=button]");
+      // 按钮候选选择器（大幅放宽）
+      const CAND_SELECTOR = [
+        'button',
+        'input[type="button"]',
+        'a.btn', 'span.btn',
+        '[role="button"]',
+        '[onclick*="saythanks"]',
+        '[id*="thanks"]',
+        '[class*="thanks"]'
+      ].join(',');
 
-      // —— 打开即“跳过”：无按钮且无函数，或按钮初始禁用 —— //
-      if (!btn && typeof window.saythanks !== "function") {
+      const host = document.querySelector('#thanksbutton') || document.body;
+
+      // 找候选按钮（去掉隐藏的）
+      const findCandidates = () => {
+        return Array.from(document.querySelectorAll(CAND_SELECTOR))
+          .filter(el => {
+            const s = getComputedStyle(el);
+            return s && s.display !== 'none' && s.visibility !== 'hidden';
+          });
+      };
+
+      // 统一判断“是否禁用”
+      const isDisabled = (el) => {
+        if (!el) return false;
+        if (el.disabled || el.getAttribute('disabled') !== null) return true;
+        if (el.getAttribute('aria-disabled') === 'true') return true;
+        const cls = (el.className || '').toString().toLowerCase();
+        if (/\bdisabled\b/.test(cls)) return true;
+        const s = getComputedStyle(el);
+        if (s.pointerEvents === 'none') return true;
+        return false;
+      };
+
+      // 读取元素文本
+      const getText = (el) => {
+        if (!el) return '';
+        if (el.tagName && el.tagName.toLowerCase() === 'input') {
+          return (el.value || '').trim();
+        }
+        return (el.textContent || '').trim();
+      };
+
+      // 操作后“成功”优先条件：存在“按钮样”元素同时包含【感谢】【成功】
+      const hasThankSuccessButton = () => {
+        return findCandidates().some(el => {
+          const t = getText(el);
+          return t.includes('感谢') && t.includes('成功');
+        });
+      };
+
+      // 初始候选
+      let cands = findCandidates();
+      // 打开即“跳过”：完全没候选且没有 saythanks()；或候选存在但都已禁用
+      const hasSayThanksFunc = typeof window.saythanks === 'function';
+      const allDisabled = cands.length > 0 && cands.every(isDisabled);
+      if ((cands.length === 0 && !hasSayThanksFunc) || allDisabled) {
         return { skipped: true };
       }
-      if (btn && (btn.disabled || btn.getAttribute("disabled") !== null)) {
-        return { skipped: true };
-      }
 
-      // —— 触发 —— //
+      // 触发（优先调用 saythanks，其次点击第一个候选）
       const trigger = () => {
         try {
-          if (typeof window.saythanks === "function") {
+          if (typeof window.saythanks === 'function') {
             window.saythanks(Number(id));
             return true;
           }
         } catch {}
-        if (btn) { btn.click(); return true; }
+        cands = findCandidates();
+        if (cands[0]) {
+          cands[0].click();
+          return true;
+        }
         return false;
       };
 
-      // 检查“按钮样元素”的文本是否同时包含【感谢】【成功】
-      const hasThankSuccessButton = () => {
-        // 候选：真正的按钮 / input / a.btn / span.btn / [role=button]
-        const cands = Array.from(document.querySelectorAll(
-          'button, input[type="button"], a.btn, span.btn, [role="button"], #saythanks, #thanksbutton input[type="button"]'
-        ));
-        return cands.some(el => {
-          let text = "";
-          if (el.tagName.toLowerCase() === "input") {
-            text = (el.value || "").trim();
-          } else {
-            text = (el.textContent || "").trim();
-          }
-          return text.includes("感谢") && text.includes("成功");
-        });
-      };
-
-      // 兜底：按钮消失/禁用 或 区域 DOM 变化 也视作成功（不同站点可能不是文字提示）
       const initialHtml = host.innerHTML;
-      const isSuccessNow = () => {
-        const curBtn = document.querySelector("#saythanks") || document.querySelector("#thanksbutton input[type=button]");
-        const disappeared = !curBtn;
-        const disabled    = curBtn && (curBtn.disabled || curBtn.getAttribute("disabled") !== null);
-        const changed     = (document.querySelector("#thanksbutton") || document.body).innerHTML !== initialHtml;
-        return hasThankSuccessButton() || disappeared || disabled || changed;
-      };
-
       const fired = trigger();
+
+      // 兜底成功信号：按钮消失或禁用，或区域 DOM 有变化
+      const isSuccessNow = () => {
+        const curCands = findCandidates();
+        const disappeared = curCands.length === 0;                // 候选消失
+        const anyDisabled = curCands.some(isDisabled);            // 候选禁用
+        const changed = (document.querySelector('#thanksbutton') || document.body).innerHTML !== initialHtml;
+        return hasThankSuccessButton() || disappeared || anyDisabled || changed;
+      };
 
       return new Promise((resolve) => {
         const start = Date.now();
@@ -173,7 +209,7 @@ async function thankOnDetailTab(tabId) {
             resolve({ success: true });
           } else if (Date.now() - start > THANK_TIMEOUT_MS) {
             clearInterval(timer);
-            resolve({ success: false }); // 超时未出现“感谢…成功”按钮，也未消失/禁用 → 失败
+            resolve({ success: false });
           }
         }, 200);
       });
