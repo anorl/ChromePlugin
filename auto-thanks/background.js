@@ -103,7 +103,7 @@ function waitForTabLoad(tabId) {
   });
 }
 
-// 在详情页执行“点击说谢谢，并判定是否成功”的脚本
+// 在详情页执行“点击说谢谢”，并根据“按钮含有【感谢】【成功】”来判定成功
 async function thankOnDetailTab(tabId) {
   const [{ result }] = await chrome.scripting.executeScript({
     target: { tabId },
@@ -112,9 +112,10 @@ async function thankOnDetailTab(tabId) {
       const url = new URL(location.href);
       const id = url.searchParams.get("id");
 
-      const btn = document.querySelector("#saythanks") || document.querySelector("#thanksbutton input[type=button]");
+      const host = document.querySelector("#thanksbutton") || document.body;
+      const btn  = document.querySelector("#saythanks") || document.querySelector("#thanksbutton input[type=button]");
 
-      // 无按钮且无函数，或一开始就禁用 => 跳过
+      // —— 打开即“跳过”：无按钮且无函数，或按钮初始禁用 —— //
       if (!btn && typeof window.saythanks !== "function") {
         return { skipped: true };
       }
@@ -122,6 +123,7 @@ async function thankOnDetailTab(tabId) {
         return { skipped: true };
       }
 
+      // —— 触发 —— //
       const trigger = () => {
         try {
           if (typeof window.saythanks === "function") {
@@ -133,22 +135,34 @@ async function thankOnDetailTab(tabId) {
         return false;
       };
 
-      const initialHtml = (document.querySelector("#thanksbutton") || document.body).innerHTML;
+      // 检查“按钮样元素”的文本是否同时包含【感谢】【成功】
+      const hasThankSuccessButton = () => {
+        // 候选：真正的按钮 / input / a.btn / span.btn / [role=button]
+        const cands = Array.from(document.querySelectorAll(
+          'button, input[type="button"], a.btn, span.btn, [role="button"], #saythanks, #thanksbutton input[type="button"]'
+        ));
+        return cands.some(el => {
+          let text = "";
+          if (el.tagName.toLowerCase() === "input") {
+            text = (el.value || "").trim();
+          } else {
+            text = (el.textContent || "").trim();
+          }
+          return text.includes("感谢") && text.includes("成功");
+        });
+      };
 
-      const fired = trigger();
-
-      const successTextPatterns = ["已感谢","谢谢已发送","感谢成功","Thank","thanked","thanks"];
+      // 兜底：按钮消失/禁用 或 区域 DOM 变化 也视作成功（不同站点可能不是文字提示）
+      const initialHtml = host.innerHTML;
       const isSuccessNow = () => {
-        const host = document.querySelector("#thanksbutton") || document.body;
-        const html = host.innerHTML || "";
         const curBtn = document.querySelector("#saythanks") || document.querySelector("#thanksbutton input[type=button]");
         const disappeared = !curBtn;
-        const disabled = curBtn && (curBtn.disabled || curBtn.getAttribute("disabled") !== null);
-        const text = host.textContent || "";
-        const textHit = successTextPatterns.some(k => text.toLowerCase().includes(k.toLowerCase()));
-        const changed = html !== initialHtml;
-        return disappeared || disabled || textHit || changed;
+        const disabled    = curBtn && (curBtn.disabled || curBtn.getAttribute("disabled") !== null);
+        const changed     = (document.querySelector("#thanksbutton") || document.body).innerHTML !== initialHtml;
+        return hasThankSuccessButton() || disappeared || disabled || changed;
       };
+
+      const fired = trigger();
 
       return new Promise((resolve) => {
         const start = Date.now();
@@ -159,7 +173,7 @@ async function thankOnDetailTab(tabId) {
             resolve({ success: true });
           } else if (Date.now() - start > THANK_TIMEOUT_MS) {
             clearInterval(timer);
-            resolve({ success: false });
+            resolve({ success: false }); // 超时未出现“感谢…成功”按钮，也未消失/禁用 → 失败
           }
         }, 200);
       });
@@ -168,6 +182,9 @@ async function thankOnDetailTab(tabId) {
 
   return result || { success: false };
 }
+
+
+
 
 // —— 打开详情：点感谢 → 判定 → 关页（记录当前详情网址） —— //
 async function openDetailsSequentially(urls) {

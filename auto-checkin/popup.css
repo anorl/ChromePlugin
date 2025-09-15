@@ -27,9 +27,9 @@ section { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padd
 
 small { color: #6b7280; }
 
-/* 合并后的记录表（保持五列） */
+/* 合并后的记录表（改为六列：最后一列为“操作”） */
 .table { width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
-.thead, .tbody .tr { display: grid; grid-template-columns: 2fr 3fr 2.2fr 1.2fr 3fr; }
+.thead, .tbody .tr { display: grid; grid-template-columns: 2fr 3.4fr 2.2fr 1.2fr 3fr 1.2fr; }
 .thead { background: #f3f4f6; color: #374151; font-weight: 600; }
 /* 表头与单元格：不换行，不再省略 */
 .thead > div, .tbody .tr > div {
@@ -40,6 +40,13 @@ small { color: #6b7280; }
   text-overflow: clip;     /* 关闭省略号 */
   min-width: 0;
 }
+/* 操作列里的按钮 */
+.op-run {
+  background: #2563eb; color: #fff; border: none; border-radius: 8px;
+  padding: 4px 10px; font-size: 12px; cursor: pointer;
+}
+.op-run:hover { background: #1d4ed8; }
+.tbody .tr > div:last-child { text-align: center; }
 
 /* 状态色 */
 .status-success { color: #059669; font-weight: 600; }

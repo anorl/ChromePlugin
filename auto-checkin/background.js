@@ -18,18 +18,19 @@ let abortFlag = false;
  * run({budgetMs}) 返回 { status, reason? }
  * 状态： success / skipped / failed / timeout
  */
-const TASKS = [
+const CORE_TASKS = [
   {
     id: "HHanClub",
     name: "HHanClub 签到",
     url: "https://hhanclub.top/attendance.php",
+    budgetMs: 8000,
     run: async ({ budgetMs = 5000 } = {}) => {
       const url = "https://hhanclub.top/attendance.php";
       const tab = await chrome.tabs.create({ url, active: false });
 
       // 5 秒总预算：略等加载 + 轮询“本次签到获得”
-      const phaseA = Math.min(1400, Math.max(500, Math.floor(budgetMs * 0.28))); // 软等加载
-      const phaseC = Math.max(800, budgetMs - phaseA - 200);                      // 轮询成功文案
+      const phaseA = Math.min(2200, Math.max(600, Math.floor(budgetMs * 0.28)));
+      const phaseC = Math.max(1200, budgetMs - phaseA - 200);
       try {
         // 用“软等待”避免 CF/重定向导致的过早 timeout
         await softWaitTabComplete(tab.id, phaseA);
@@ -40,7 +41,7 @@ const TASKS = [
           world: "MAIN",
           func: waitForTexts,          // ← 见下方新增的注入函数
           args: [{
-            successTexts: ["本次签到获得"],                  // 你要求的关键字
+            successTexts: ["本次签到获得","签到已得"],                  // 你要求的关键字
             loginTexts: ["请先登录", "登入", "登录"],         // 可按需增减
             maxWaitMs: phaseC,
             pollIntervalMs: 250
@@ -65,33 +66,26 @@ const TASKS = [
     id: "Ourbits",
     name: "Ourbits 签到",
     url: "https://ourbits.club",
+    budgetMs: 8000,
     run: async ({ budgetMs = 5000 } = {}) => {
       const url = "https://ourbits.club";
       const tab = await chrome.tabs.create({ url, active: false });
 
-      const phaseA = Math.min(1500, Math.max(500, Math.floor(budgetMs * 0.3)));
-      const phaseB = Math.min(2000, Math.max(800, Math.floor(budgetMs * 0.4)));
-      const phaseC = Math.max(800, budgetMs - phaseA - phaseB);
+      const phaseA = Math.min(2800, Math.max(800, Math.floor(budgetMs * 0.35)));
+      const phaseB = Math.min(2800, Math.max(900, Math.floor(budgetMs * 0.30)));
+      const phaseC = Math.max(1200, budgetMs - phaseA - phaseB);
 
       try {
         await softWaitTabComplete(tab.id, phaseA);
 
-        const injectRes = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          world: "MAIN",
-          func: genericSignFlow,
-          args: [{
-            buttonText: "签到得魔力",
-            // ← 新增 “签到已得”
-            successTexts: ["签到成功", "今日已签到", "已签到", "签到已得"],
-            loginTexts: ["请先登录", "登入", "登录"],
-            maxWaitForBtnMs: phaseB,
-            maxWaitForSuccessMs: phaseC,
-            pollIntervalMs: 300
-          }]
-        });
-
-        const { result } = injectRes[0] || {};
+        const result = await execWithRetry(tab.id, genericSignFlow, [{
+          buttonText: "签到得魔力",
+          successTexts: ["签到成功", "今日已签到", "已签到", "签到已得"],
+          loginTexts: ["请先登录", "登入", "登录"],
+          maxWaitForBtnMs: phaseB,
+          maxWaitForSuccessMs: phaseC,
+          pollIntervalMs: 250
+        }], { retries: 1 });
         if (!result) return { status: "failed", reason: "no_result" };
 
         // 只要脚本报告 ok，就记为 success（包含 already_signed 的情况）
@@ -116,33 +110,26 @@ const TASKS = [
     id: "Audiences",
     name: "Audiences 签到（爆米花）",
     url: "https://audiences.me",
+    budgetMs: 8000,
     run: async ({ budgetMs = 5000 } = {}) => {
       const url = "https://audiences.me";
       const tab = await chrome.tabs.create({ url, active: false });
 
       // 5秒总预算内分配三个阶段
-      const phaseA = Math.min(1500, Math.max(500, Math.floor(budgetMs * 0.3)));   // 初步加载
-      const phaseB = Math.min(2000, Math.max(800, Math.floor(budgetMs * 0.4)));   // 等按钮
-      const phaseC = Math.max(800, budgetMs - phaseA - phaseB);                   // 等成功文案
+      const phaseA = Math.min(2800, Math.max(800, Math.floor(budgetMs * 0.35)));
+      const phaseB = Math.min(2800, Math.max(900, Math.floor(budgetMs * 0.30)));
+      const phaseC = Math.max(1200, budgetMs - phaseA - phaseB);
 
       try {
         await softWaitTabComplete(tab.id, phaseA);
-        const injectRes = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          world: "MAIN",
-          func: genericSignFlow,  // ← 使用通用函数
-          args: [{
-            buttonText: "签到得爆米花",
-            // 更稳健：多放几个可能的成功文案
-            successTexts: ["签到成功", "今日已签到", "已签到", "领取成功", "今日已领取", "已领取", "获得爆米花","签到已得"],
-            loginTexts: ["请先登录", "登入", "登录"],
-            maxWaitForBtnMs: phaseB,
-            maxWaitForSuccessMs: phaseC,
-            pollIntervalMs: 300
-          }]
-        });
-
-        const { result } = injectRes[0] || {};
+        const result = await execWithRetry(tab.id, genericSignFlow, [{
+          buttonText: "签到得爆米花",
+          successTexts: ["签到成功", "今日已签到", "已签到", "领取成功", "今日已领取", "已领取", "获得爆米花","签到已得"],
+          loginTexts: ["请先登录", "登入", "登录"],
+          maxWaitForBtnMs: phaseB,
+          maxWaitForSuccessMs: phaseC,
+          pollIntervalMs: 250
+        }], { retries: 1 });
         if (!result) return { status: "failed", reason: "no_result" };
         if (result.ok) return { status: "success" };
         if (result.reason === "already_signed") return { status: "skipped", reason: "already_signed" };
@@ -158,123 +145,29 @@ const TASKS = [
     }
   },
   {
-    id: "M-Team",
-    name: "M-Team 打开即关",
-    url: "https://kp.m-team.cc", 
-    run: async ({ budgetMs = 5000 } = {}) => {
-      const url = "https://kp.m-team.cc";
-      const tab = await chrome.tabs.create({ url, active: false });
-
-      // 在 5 秒预算内分配给“等待完全加载”的时间
-      const waitMs = Math.max(1000, Math.min(4500, budgetMs - 300));
-
-      try {
-        await waitTabComplete(tab.id, waitMs); // 监听 tabs.onUpdated status=complete
-        await sleep(200);
-        return { status: "success" };
-      } catch (e) {
-        return { status: "timeout", reason: "tab_complete_timeout" };
-      } finally {
-        try { await chrome.tabs.remove(tab.id); } catch {}
-      }
-    }
-  },
-  {
-    id: "CHDBits",
-    name: "CHDBits 打开即关",
-    url: "https://ptchdbits.co", 
-    run: async ({ budgetMs = 5000 } = {}) => {
-      const url = "https://ptchdbits.co";
-      const tab = await chrome.tabs.create({ url, active: false });
-
-      // 5 秒预算内给“等待完全加载”的时间，留一点余量用于收尾
-      const waitMs = Math.max(1000, Math.min(4500, budgetMs - 300));
-
-      try {
-        await waitTabComplete(tab.id, waitMs);  // 监听到 status=complete 即视为“完全打开”
-        await sleep(200);
-        return { status: "success" };
-      } catch (e) {
-        // 若站点有 Cloudflare/登录跳转导致迟迟不 complete，会在预算内给出 timeout
-        return { status: "timeout", reason: "tab_complete_timeout" };
-      } finally {
-        try { await chrome.tabs.remove(tab.id); } catch {}
-      }
-    }
-  },
-  {
-    id: "SpringSunday",
-    name: "SpringSunday 打开即关",
-    url: "https://springsunday.net",
-    run: async ({ budgetMs = 5000 } = {}) => {
-      const url = "https://springsunday.net";
-      const tab = await chrome.tabs.create({ url, active: false });
-      const waitMs = Math.max(1000, Math.min(4500, budgetMs - 300));
-
-      try {
-        await waitTabComplete(tab.id, waitMs); // 等到 status=complete
-        await sleep(200);
-        return { status: "success" };
-      } catch (e) {
-        return { status: "timeout", reason: "tab_complete_timeout" };
-      } finally {
-        try { await chrome.tabs.remove(tab.id); } catch {}
-      }
-    }
-  },
-  {
-    id: "KeepFRDS",
-    name: "KeepFRDS 打开即关",
-    url: "https://pt.keepfrds.com",
-    run: async ({ budgetMs = 5000 } = {}) => {
-      const url = "https://pt.keepfrds.com";
-      const tab = await chrome.tabs.create({ url, active: false });
-
-      // 5 秒预算内给页面加载的等待时间，留 300ms 余量做收尾
-      const waitMs = Math.max(1000, Math.min(4500, budgetMs - 300));
-
-      try {
-        await waitTabComplete(tab.id, waitMs); // 等到 status=complete 视为“完全打开”
-        await sleep(200);
-        return { status: "success" };
-      } catch (e) {
-        return { status: "timeout", reason: "tab_complete_timeout" };
-      } finally {
-        try { await chrome.tabs.remove(tab.id); } catch {}
-      }
-    }
-  },
-  {
     id: "YemaPT",
     name: "YemaPT 签到",
     url: "https://www.yemapt.org/#/consumer/checkIn",
-    run: async ({ budgetMs = 5000 } = {}) => {
+    budgetMs: 8000,
+    run: async ({ budgetMs = 7000 } = {}) => {
       const url = "https://www.yemapt.org/#/consumer/checkIn";
       const tab = await chrome.tabs.create({ url, active: false });
 
-      // 5s 预算内：给 SPA/CF 稳定留 ~2.8~3.0s，剩余用于点击与成功轮询
-      const preWait = Math.min(3000, Math.max(1200, Math.floor(budgetMs * 0.55)));
+      const preWait = Math.min(3600, Math.max(1400, Math.floor(budgetMs * 0.55)));
       try {
         // 若很快 complete 就行；否则不报错，直接进入下一步
-        await softWaitTabComplete(tab.id, 1200);
+        await softWaitTabComplete(tab.id, 1400);
         await sleep(preWait);
 
         const remain = Math.max(700, budgetMs - preWait - 200);
-        const injectRes = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          world: "MAIN",
-          func: yemaptCheckinFlow,   // ← 见下方注入函数
-          args: [{
-            buttonTexts: ["签 到", "签到"], // 两种写法都兼容
-            successTexts: ["已签到"],
-            loginTexts: ["请先登录", "登入", "登录"],
-            maxWaitForBtnMs: 1200,
-            maxWaitForSuccessMs: remain,
-            pollIntervalMs: 200
-          }]
-        });
-
-        const { result } = injectRes[0] || {};
+        const result = await execWithRetry(tab.id, yemaptCheckinFlow, [{
+          buttonTexts: ["签 到", "签到"],
+          successTexts: ["已签到"],
+          loginTexts: ["请先登录", "登入", "登录"],
+          maxWaitForBtnMs: 1400,
+          maxWaitForSuccessMs: remain,
+          pollIntervalMs: 200
+        }], { retries: 1 });
         if (result?.ok)                           return { status: "success", reason: result.reason || "-" };
         if (result?.reason === "already_signed")  return { status: "success", reason: "already_signed" };
         if (result?.reason === "button_not_found")      return { status: "timeout", reason: "button_not_found" };
@@ -291,11 +184,82 @@ const TASKS = [
   }
 
 
-
-
-
-
 ];
+
+// 在 CF/二次导航较多的站点上，executeScript 可能拿不到 result；重试一次更稳
+async function execWithRetry(tabId, func, args, { retries = 1, delayMs = 400, world = "MAIN" } = {}) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const arr = await chrome.scripting.executeScript({ target: { tabId }, world, func, args });
+      const res = arr && arr[0] && arr[0].result;
+      if (res !== undefined) return res;
+    } catch (e) {
+      // 忽略本次并重试
+    }
+    await sleep(delayMs);
+  }
+  return undefined; // 仍然拿不到
+}
+
+
+// ========== 通用“打开即关”任务配置（字符串或对象皆可） ==========
+const OPEN_CLOSE_SITES = [
+  // 支持两种写法：1) 只写 URL 字符串；2) 自定义 {id,name,url}
+  "https://pt.keepfrds.com",
+  "https://ptchdbits.co",
+  "https://springsunday.net",
+  { id:"M-Team", name:"M-Team 打开即关", url:"https://kp.m-team.cc" },
+];
+
+// ========== 工具：从 URL 生成简短 id/name ==========
+function makeIdFromUrl(u) {
+  try {
+    const { hostname, pathname } = new URL(u);
+    const host = hostname.replace(/^www\./, "");
+    const path = pathname.replace(/\/+$/, "").split("/").filter(Boolean)[0] || "";
+    return (path ? `${host}-${path}` : host)
+      .replace(/[^a-zA-Z0-9\-_.]/g, "_"); // 安全化
+  } catch { return `oc-${Math.random().toString(36).slice(2, 8)}`; }
+}
+function makeNameFromUrl(u) {
+  try {
+    const { hostname } = new URL(u);
+    return `${hostname.replace(/^www\./, "")} 打开即关`;
+  } catch { return "打开即关"; }
+}
+
+// ========== 工厂：把 URL 包装成“打开即关”任务 ==========
+function makeOpenCloseTask(entry) {
+  const item = (typeof entry === "string") ? { url: entry } : entry;
+  const url  = item.url;
+  const id   = item.id   || makeIdFromUrl(url);
+  const name = item.name || makeNameFromUrl(url);
+
+  return {
+    id, name, url,
+    run: async ({ budgetMs = 5000 } = {}) => {
+      const tab = await chrome.tabs.create({ url, active: false });
+      const waitMs = Math.max(1000, Math.min(4500, budgetMs - 300)); // 完全加载语义
+      try {
+        await waitTabComplete(tab.id, waitMs); // 等到 status=complete
+        await sleep(200);
+        return { status: "success" };
+      } catch (e) {
+        return { status: "timeout", reason: "tab_complete_timeout" };
+      } finally {
+        try { await chrome.tabs.remove(tab.id); } catch {}
+      }
+    }
+  };
+}
+
+// ========== 拼装最终任务表：复杂任务 + 打开即关任务 ==========
+const TASKS = [
+  ...CORE_TASKS,
+  ...OPEN_CLOSE_SITES.map(makeOpenCloseTask),
+];
+
+
 
 // ====== 安装/启动：初始化定时 ======
 chrome.runtime.onInstalled.addListener(async () => { await ensureSchedule(); await rescheduleAlarm(); });
@@ -325,6 +289,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (isRunning) return sendResponse({ ok: false, error: "正在运行中" });
       runAllTasks(); // 不 await
       sendResponse({ ok: true });
+
+    } else if (msg?.type === "run-one") {
+      if (isRunning) return sendResponse({ ok: false, error: "正在运行中" });
+      // 单站运行：开启/结束广播与状态维护与批量一致
+      (async () => {
+        isRunning = true;
+        broadcast({ type: "run-start" });
+        try {
+          const ok = await runOneTask(msg.taskId);
+          sendResponse({ ok });
+        } catch (e) {
+          sendResponse({ ok: false, error: String(e) });
+        } finally {
+          isRunning = false;
+          broadcast({ type: "run-end" });
+        }
+      })();
+      return true; // 异步响应
+      
 
     } else if (msg?.type === "stop-run") {
       abortFlag = true;
@@ -361,7 +344,7 @@ async function runAllTasks() {
     // 执行单任务（总预算 5 秒）
     let result = null;
     try {
-      const budgetMs = 5000;
+      const budgetMs = t.budgetMs || 5000;
       result = await t.run({ budgetMs });
       // 若任务内部未在预算内完成，这里仍然接到返回值；我们用内部时间裁剪保证不超过5秒
       if (!result || !result.status) result = { status: "failed", reason: "no_result" };
@@ -378,6 +361,24 @@ async function runAllTasks() {
 
   isRunning = false;
   broadcast({ type: "run-end" });
+}
+
+// 新增：只执行一个任务（按当前 TASKS 中的配置）
+async function runOneTask(taskId) {
+  const t = TASKS.find(x => x.id === taskId);
+  if (!t) throw new Error("unknown_task: " + taskId);
+  let result;
+  try {
+    const budgetMs = t.budgetMs || 5000;
+    result = await t.run({ budgetMs });
+    if (!result || !result.status) result = { status: "failed", reason: "no_result" };
+  } catch (e) {
+    result = { status: "failed", reason: String(e?.message || e) };
+  }
+  await recordStatus(t, result);
+  broadcast({ type: "run-progress", entry: await getLastStatusEntry(t.id) });
+  await sleep(100);
+  return true;
 }
 
 // ====== 工具：状态记录与查询 ======
@@ -498,9 +499,9 @@ async function genericSignFlow(opts) {
     return nodes.find(predicate);
   };
 
-  // 0) 若已显示成功/已签，直接跳过
-  if (pageHas(successTexts)) return { ok: true, reason: "already_signed" };
-  if (pageHas(loginTexts)) return { ok: false, reason: "need_login" };
+  // 0) 进入就判：已签到/需登录
+  if (pageHasVisible(successTexts)) return { ok: true, reason: "already_signed" };
+  if (pageHasVisible(loginTexts))   return { ok: false, reason: "need_login" };
 
   // 1) 等按钮，限时（先精确、再模糊）
   const t0 = Date.now();
@@ -584,10 +585,21 @@ async function yemaptCheckinFlow(opts) {
     (document.body && (document.body.innerText || document.body.textContent))
       ? (document.body.innerText || document.body.textContent)
       : "";
-
-  const pageHas = (texts) => {
-    const txt = norm(getBodyText());
-    return texts.some(t => t && txt.includes(norm(t)));
+  const isVisible = (el) => {
+    if (!(el instanceof HTMLElement)) return false;
+    const r = el.getBoundingClientRect();
+    const cs = window.getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none";
+  };
+  const pageHasVisible = (texts) => {
+    const wanted = texts.map(norm);
+    const all = Array.from(document.querySelectorAll("*"));
+    for (const el of all) {
+      if (!isVisible(el)) continue;
+      const txt = norm(el.innerText || el.textContent || "");
+      if (txt && wanted.some(w => txt.includes(w))) return true;
+    }
+    return false;
   };
 
   // 0) 进入就判：已签到/需登录
@@ -601,6 +613,7 @@ async function yemaptCheckinFlow(opts) {
       "button, a, [role=button], [onclick], .btn, .button"
     ));
     const hit = list.find(el => {
+      if (!isVisible(el)) return false;
       const it = norm(el.innerText);
       const iv = norm(el.value);
       return wanted.some(w => it.includes(w) || (iv && iv.includes(w)));
@@ -611,9 +624,8 @@ async function yemaptCheckinFlow(opts) {
     const all = Array.from(document.querySelectorAll("*"));
     return all.find(el => {
       if (!(el instanceof HTMLElement)) return false;
-      const rect = el.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return false;
-      const txt = norm(el.innerText);
+      if (!isVisible(el)) return false;
+      const txt = norm(el.innerText || el.textContent || "");
       return txt && wanted.some(w => txt.includes(w));
     });
   };
@@ -623,7 +635,7 @@ async function yemaptCheckinFlow(opts) {
   while (Date.now() - t0 < maxWaitForBtnMs) {
     btn = findClickable();
     if (btn) break;
-    if (pageHas(successTexts)) return { ok: true, reason: "already_signed" };
+    if (pageHasVisible(successTexts)) return { ok: true, reason: "already_signed" };
     await wait(pollIntervalMs);
   }
   if (!btn) return { ok: false, reason: "button_not_found" };
@@ -634,8 +646,8 @@ async function yemaptCheckinFlow(opts) {
   // 3) 轮询“已签到”
   const t1 = Date.now();
   while (Date.now() - t1 < maxWaitForSuccessMs) {
-    if (pageHas(successTexts)) return { ok: true };
-    if (pageHas(loginTexts))   return { ok: false, reason: "logged_out_midway" };
+    if (pageHasVisible(successTexts)) return { ok: true };
+    if (pageHasVisible(loginTexts))   return { ok: false, reason: "logged_out_midway" };
     await wait(pollIntervalMs);
   }
   return { ok: false, reason: "success_text_timeout" };

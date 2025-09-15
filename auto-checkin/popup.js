@@ -98,12 +98,30 @@ function prependRecord(e) {
     <div>${fmtTime(e.ts)}</div>
     <div class="${statusClass(e.status)}">${escapeHtml(e.status)}</div>
     <div>${escapeHtml(e.reason || "-")}</div>
+    <div><button class="op-run" data-task="${escapeAttr(e.taskId)}">运行</button></div>
   `;
   recordBody.prepend(row);
 }
 
 // 新增：用于安全写入 href 的转义
 function escapeAttr(s){ return String(s ?? "").replace(/"/g, "&quot;"); }
+
+// 事件代理：点击某行的【运行】按钮，只执行该任务
+recordBody.addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".op-run");
+  if (!btn) return;
+  const taskId = btn.dataset.task;
+  try {
+    const st = await chrome.runtime.sendMessage({ type: "get-state" });
+    if (!st?.ok) return alert("获取状态失败");
+    if (st.running) return alert("当前正在运行中，稍后再试");
+    const r = await chrome.runtime.sendMessage({ type: "run-one", taskId });
+    if (!r?.ok) return alert("无法执行：" + (r?.error || "未知错误"));
+    setRunning(true); // 后台会广播 run-start / run-end
+  } catch (e) {
+    alert("执行失败：" + e);
+  }
+});
 
 function setRunning(flag) {
   runFlag.textContent = flag ? "运行中" : "闲置";

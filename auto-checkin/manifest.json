@@ -5,14 +5,7 @@
   "description": "按日定时执行代码化任务：打开页面、点击按钮、等待成功并关闭；支持5秒超时、任务状态展示与停止运行。",
   "permissions": ["alarms", "tabs", "scripting", "storage", "notifications"],
   "host_permissions": [
-    "https://hhanclub.top/*",
-    "https://ourbits.club/*",
-    "https://audiences.me/*",
-    "https://kp.m-team.cc/*",
-    "https://ptchdbits.co/*",
-    "https://springsunday.net/*",
-    "https://pt.keepfrds.com/*",
-    "https://www.yemapt.org/*"
+    "https://*/*"
   ],
 
   "icons": {
