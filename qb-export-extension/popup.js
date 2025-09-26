@@ -76,6 +76,10 @@ async function fetchAndDownloadTorrents() {
     { keyword: "oldtoons", site: "oldtoons" },
     { keyword: "pandapt", site: "熊猫高清" },
     { keyword: "byr", site: "北邮人" },
+    { keyword: "ptsbao", site: "烧包" },
+    { keyword: "longpt", site: "longpt" },
+    { keyword: "hxpt", site: "好学" },
+    { keyword: "tjupt", site: "北洋园" },
     { keyword: "tleechreload", site: "TorrentLeech" },
     { keyword: "u2.dmhy", site: "U2 (动漫)" }
   ];
