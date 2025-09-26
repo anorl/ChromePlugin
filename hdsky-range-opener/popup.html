@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>按大小依次打开下载页</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;min-width:280px;padding:12px}
+    .row{margin:8px 0}
+    .btn{padding:6px 12px;border-radius:8px;border:0;cursor:pointer}
+    .btn.primary{background:#3b82f6;color:#fff}
+    .btn.danger{background:#10b981;color:#fff}
+    .muted{color:#6b7280;font-size:12px}
+    input[type="number"]{width:90px;padding:6px;border-radius:6px;border:1px solid #d1d5db}
+    #status{color:#10b981;font-weight:600;margin-left:6px}
+  </style>
+</head>
+<body>
+  <div class="row"><strong>按大小依次打开下载页</strong> <span id="status">—</span></div>
+
+  <div class="row">
+    <button class="btn danger" id="toggle">启用</button>
+    <button class="btn primary" id="start" style="margin-left:8px;">开始处理当前页</button>
+    <button class="btn" id="test" style="margin-left:8px;">测试打开</button>
+  </div>
+
+  <div id="progress" class="row muted">
+    <div>运行状态：<span id="runState">—</span></div>
+    <div>进度：<span id="runProgress">—</span></div>
+  </div>
+
+  <div class="row">
+    <div class="muted">最小 GB</div>
+    <input id="minGB" type="number" step="0.1" value="1" />
+  </div>
+  <div class="row">
+    <div class="muted">最大 GB</div>
+    <input id="maxGB" type="number" step="0.1" value="20" />
+  </div>
+
+  <div class="row">
+    <button class="btn" id="save">保存配置</button>
+  </div>
+
+  <div class="row muted" style="line-height:1.5">
+    仅在 <code>torrents.php</code> 列表页生效。点击“开始处理当前页”后，会按设定范围过滤，并按 3 秒节奏依次打开对应的下载提示页。<br>
+    * 本扩展不会自动下载，只负责打开页面。
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
