@@ -30,7 +30,7 @@ async function fetchAndDownloadTorrents() {
     { keyword: "m-team", site: "馒头" },
     { keyword: "ourbits", site: "我堡" },
     { keyword: "hdhome", site: "家园" },
-    { keyword: "springsunday", site: "不可说" },
+    { keyword: "springsunday", site: "春天" },
     { keyword: "totheglory", site: "听听歌" },
     { keyword: "chdbits", site: "彩虹岛" },
     { keyword: "rainbowisland", site: "彩虹岛" },
@@ -83,6 +83,9 @@ async function fetchAndDownloadTorrents() {
     { keyword: "hawke", site: "hawke" },
     { keyword: "si-qi", site: "思齐" },
     { keyword: "gamegamept", site: "GGPT" },
+    { keyword: "cspt", site: "财神" },
+    { keyword: "crabpt", site: "蟹黄堡" },
+    { keyword: "sunnytk", site: "sunny" },
     { keyword: "tleechreload", site: "TorrentLeech" },
     { keyword: "u2.dmhy", site: "U2 (动漫)" }
   ];
@@ -136,7 +139,7 @@ async function fetchAndDownloadTorrents() {
     ]);
   }
 
-  const BOM = "\uFEFF";
+  const BOM = String.fromCharCode(0xfeff); // UTF-8 BOM
   const csvContent = csvRows
     .map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","))
     .join("\n");
