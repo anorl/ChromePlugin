@@ -139,7 +139,7 @@ async function fetchAndDownloadTorrents() {
     ]);
   }
 
-  const BOM = String.fromCharCode(0xfeff); // UTF-8 BOM
+  const BOM = "\uFEFF";
   const csvContent = csvRows
     .map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","))
     .join("\n");
