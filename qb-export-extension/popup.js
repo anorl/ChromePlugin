@@ -80,6 +80,9 @@ async function fetchAndDownloadTorrents() {
     { keyword: "longpt", site: "longpt" },
     { keyword: "hxpt", site: "好学" },
     { keyword: "tjupt", site: "北洋园" },
+    { keyword: "hawke", site: "hawke" },
+    { keyword: "si-qi", site: "思齐" },
+    { keyword: "gamegamept", site: "GGPT" },
     { keyword: "tleechreload", site: "TorrentLeech" },
     { keyword: "u2.dmhy", site: "U2 (动漫)" }
   ];
