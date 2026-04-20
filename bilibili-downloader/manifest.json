@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Bilibili 一键视频下载",
+  "version": "1.0",
+  "description": "从当前 Bilibili 视频页提取标题与下载链接，自动下载视频文件。",
+  "permissions": ["downloads", "activeTab", "scripting"],
+  "host_permissions": ["https://*.bilibili.com/*", "https://api.bilibili.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Bilibili 视频下载"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
