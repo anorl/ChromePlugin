@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "PT 种子认领助手",
+  "version": "0.1.0",
+  "description": "在 PTerClub 用户做种列表中，按页面交互顺序逐个认领种子。",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://pterclub.net/*"],
+  "action": {
+    "default_title": "PT 种子认领助手",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://pterclub.net/userdetails.php*"],
+      "js": ["logic.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
