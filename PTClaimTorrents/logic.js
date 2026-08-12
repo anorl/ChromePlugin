@@ -56,10 +56,29 @@
     }
   }
 
-  function looksLikeFailure(title, message) {
-    return /失败|错误|请求失败|不足|不能|无法|上限|已被.{0,4}认领|不存在|无权限/i.test(
-      `${title || ""} ${message || ""}`
-    );
+  function classifyResult(title, message) {
+    const text = `${title || ""} ${message || ""}`;
+
+    // 这些错误不会因为换一个种子而消失，应暂停并交给用户处理。
+    if (
+      /猫粮.{0,8}不足|余额.{0,8}不足|达到.{0,8}上限|超过.{0,8}上限|无权限|请.{0,4}登录|登录.{0,4}失效|请求失败|操作.{0,4}频繁|稍后再试|验证码|封禁/i.test(
+        text
+      )
+    ) {
+      return "fatal";
+    }
+
+    // 认领具有竞争性。被别人抢先、条目失效等只跳过当前项。
+    if (
+      /已被.{0,12}认领|已经被.{0,12}认领|重复认领|无需重复|不存在|已失效|认领失败/i.test(
+        text
+      )
+    ) {
+      return "skip";
+    }
+
+    if (/失败|错误|不能|无法|不足|上限/i.test(text)) return "fatal";
+    return "success";
   }
 
   root.PTClaimLogic = {
@@ -67,6 +86,9 @@
     normalizeConfig,
     randomBetween,
     torrentIdFromUrl,
-    looksLikeFailure
+    classifyResult,
+    looksLikeFailure(title, message) {
+      return classifyResult(title, message) !== "success";
+    }
   };
 })(globalThis);

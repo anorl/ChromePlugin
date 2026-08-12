@@ -21,5 +21,8 @@ assert.equal(logic.randomBetween(10, 20, 0), 10);
 assert.equal(logic.randomBetween(10, 20, 0.9999), 20);
 assert.equal(logic.looksLikeFailure("认领失败", "猫粮不足"), true);
 assert.equal(logic.looksLikeFailure("认领成功", "操作完成"), false);
+assert.equal(logic.classifyResult("认领失败", "该种子已经被其他人认领"), "skip");
+assert.equal(logic.classifyResult("认领失败", "猫粮不足，无法继续"), "fatal");
+assert.equal(logic.classifyResult("提示", "认领成功"), "success");
 
 console.log("logic tests passed");

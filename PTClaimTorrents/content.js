@@ -31,6 +31,7 @@
       failed: 0,
       currentTorrentId: null,
       nextRunAt: 0,
+      emptyChecks: 0,
       lastMessage: "尚未开始",
       ...(stored[RUN_KEY] || {})
     };
@@ -54,6 +55,10 @@
       }, 100);
       setTimeout(() => clearInterval(check), ms + 50);
     });
+  }
+
+  function plainSleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function isVisible(element) {
@@ -160,23 +165,30 @@
 
     const secondBox = await waitFor(() => resultDialog(firstBox), 5000, token);
     const result = await waitUntilResultSettles(secondBox, token);
-    const failed = logic.looksLikeFailure(result.title, result.message);
+    const classification = logic.classifyResult(result.title, result.message);
+    const failed = classification !== "success";
+    const fatal = classification === "fatal";
     const previous = await getRunState();
     const torrentDelay = logic.randomBetween(config.minTorrentDelayMs, config.maxTorrentDelayMs);
 
     await updateRunState({
-      running: !failed,
+      running: !fatal,
       completed: previous.completed + (failed ? 0 : 1),
       failed: previous.failed + (failed ? 1 : 0),
       currentTorrentId: null,
-      nextRunAt: failed ? 0 : Date.now() + torrentDelay,
-      lastMessage: `${result.title || (failed ? "认领失败" : "认领完成")}：${result.message}`
+      nextRunAt: fatal ? 0 : Date.now() + torrentDelay,
+      emptyChecks: 0,
+      lastMessage:
+        classification === "skip"
+          ? `已跳过当前种子并继续：${result.message}`
+          : `${result.title || (failed ? "认领失败" : "认领完成")}：${result.message}`
     });
 
     // 站点在 AJAX 完成约 1 秒后刷新。短暂延迟后点击第二层确定按钮。
-    await sleep(logic.randomBetween(250, 550), token);
+    // 这里不使用可取消等待，避免状态切换为“暂停”时漏点第二层确定。
+    await plainSleep(logic.randomBetween(250, 550));
     if (result.button?.isConnected) result.button.click();
-    if (failed) throw new Error(`站点返回：${result.message}`);
+    if (fatal) throw new Error(`站点阻止继续认领：${result.message}`);
 
     // 正常情况下站点会先刷新；这是 response.not_reload 场景的兜底。
     await sleep(1300, token);
@@ -192,17 +204,42 @@
       const freshState = await getRunState();
       if (!freshState.running || token !== generation) return;
 
-      const button = claimButtons()[0];
+      let button = claimButtons()[0];
       if (!button) {
-        await updateRunState({
-          running: false,
-          currentTorrentId: null,
-          nextRunAt: 0,
-          lastMessage: "当前列表中没有可认领的种子"
-        });
+        try {
+          button = await waitFor(() => claimButtons()[0], 8000, token);
+        } catch (error) {
+          if (error.message === "STOPPED") throw error;
+          const latest = await getRunState();
+          const emptyChecks = (latest.emptyChecks || 0) + 1;
+          if (emptyChecks < 3) {
+            await updateRunState({
+              running: true,
+              currentTorrentId: null,
+              emptyChecks,
+              nextRunAt: Date.now() + 1000,
+              lastMessage: `暂未发现认领按钮，正在重新加载确认（${emptyChecks}/3）`
+            });
+            location.reload();
+            return;
+          }
+
+          await updateRunState({
+            running: false,
+            currentTorrentId: null,
+            emptyChecks,
+            nextRunAt: 0,
+            lastMessage: "连续 3 次确认无可认领种子，本轮已完成"
+          });
+          return;
+        }
+      }
+
+      if (!button) {
         return;
       }
 
+      await updateRunState({ emptyChecks: 0 });
       await runOne(button, await getConfig(), token);
     } catch (error) {
       if (error?.message === "STOPPED") return;
@@ -238,6 +275,7 @@
       failed: 0,
       currentTorrentId: null,
       nextRunAt: 0,
+      emptyChecks: 0,
       lastMessage: `已启动，发现 ${claimButtons().length} 个可认领种子`
     });
     ensureLoop();
