@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>PTerClub 图片上传助手</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <h1>PTerClub 图片上传助手</h1>
+  <p>右键网页图片 → 上传至 PTerClub 并复制 BBCode。</p>
+  <p id="status" role="status">尚未上传图片。</p>
+  <div class="actions"><a href="https://s3.pterclub.net/" target="_blank" rel="noreferrer">登录图床 / 查看图片</a></div>
+  <select id="privacy" aria-label="上传可见性"><option value="private">不公开列出（持有直链仍可访问）</option><option value="public">公开</option></select>
+  <div id="image-area">
+  <figure id="preview" hidden>
+    <a id="preview-link" target="_blank" rel="noopener noreferrer" title="点击查看原图"><img id="preview-image" alt="已上传图片的缩略预览" referrerpolicy="no-referrer"></a>
+    <figcaption id="preview-caption">点击缩略图查看原图</figcaption>
+  </figure>
+  <section id="recent" aria-label="最近 5 次上传"><div>最近 5 次上传</div><ul id="history"></ul></section>
+  </div>
+  <label for="bbcode">当前图片的 BBCode</label>
+  <textarea id="bbcode" rows="2" readonly placeholder="[img]图片直链[/img]"></textarea>
+  <div id="copy-actions">
+    <button id="copy" disabled>复制 BBCode</button>
+    <button id="copy-url" title="复制当前图片的直链地址" aria-label="复制图片地址" disabled>复制地址</button>
+  </div>
+  <p id="copy-status" role="status" hidden></p>
+  <script type="module" src="popup.js"></script>
+</body></html>
