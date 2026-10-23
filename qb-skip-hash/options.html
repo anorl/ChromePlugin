@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QB 一键辅种</title><link rel="stylesheet" href="options.css"></head>
+<body>
+  <main>
+    <header><img src="icons/icon-48.png" width="36" height="36" alt=""><div><h1>QB 一键辅种</h1><p class="subtitle">详情页任意空白处右键，自动识别下载链接并添加至 QB</p></div></header>
+    <form id="settings">
+      <label for="qbUrl" title="请在同一浏览器中提前登录 QB 和种子站，无需填写账号密码。">QB WebUI 地址</label>
+      <input id="qbUrl" type="url" required placeholder="http://192.168.1.10:8080" autocomplete="off">
+      <label for="savePath" title="目录及文件名必须匹配已有数据；跳过校验不会帮你查找或匹配文件。">已有文件目录（QB 服务器路径，留空使用默认目录）</label>
+      <input id="savePath" placeholder="/downloads/movies" autocomplete="off">
+      <label for="layout">种子内容布局</label>
+      <select id="layout"><option value="Original">原始布局（保留种子目录）</option><option value="Subfolder">创建子文件夹</option><option value="NoSubfolder">不创建子文件夹</option></select>
+      <label for="category">分类（可选）</label>
+      <input id="category" placeholder="留空不设置分类" autocomplete="off">
+      <div class="buttons"><button type="submit">保存配置</button><button id="test" type="button" class="secondary">测试连接</button><button id="open" type="button" class="secondary">打开 QB 登录</button></div>
+    </form>
+    <p id="feedback" role="status" aria-live="polite"></p>
+    <section><div class="status-heading"><h2>最近一次操作</h2><time id="statusTime"></time></div><p id="status" aria-live="polite">尚未执行</p></section>
+  </main>
+  <script src="options.js" type="module"></script>
+</body>
+</html>
