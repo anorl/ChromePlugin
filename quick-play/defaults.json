@@ -1,0 +1,13 @@
+{
+  "potplayer": "C:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe",
+  "mediainfo": "D:\\MediaInfo\\MediaInfo.exe",
+  "defaultRoot": "\\\\192.168.12.20\\data\\WD12T-2\\down",
+  "roots": [
+    "\\\\192.168.12.20\\data\\sda",
+    "\\\\192.168.12.20\\data\\sdc",
+    "\\\\192.168.12.20\\data\\sdd",
+    "\\\\192.168.12.20\\data\\sdf",
+    "\\\\192.168.12.20\\data\\WD12T-1\\down",
+    "\\\\192.168.12.20\\data\\WD12T-2\\down"
+  ]
+}
