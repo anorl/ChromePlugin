@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "快捷播放",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "在 PT 种子详情页快捷调用本地 PotPlayer，读取并复制 MediaInfo。",
   "permissions": ["nativeMessaging"],
   "background": {"service_worker": "background.js"},

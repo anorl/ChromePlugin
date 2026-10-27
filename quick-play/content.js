@@ -78,12 +78,12 @@
     host.dataset.quickPlay = 'panel';
     document.documentElement.append(host);
     const shadow = host.attachShadow({mode: 'closed'});
-    shadow.innerHTML = `<style>:host{all:initial}[hidden]{display:none!important}section{position:fixed;z-index:2147483647;right:24px;bottom:24px;width:min(650px,90vw);max-height:80vh;overflow:auto;padding:20px;border:1px solid #aab5c7;border-radius:12px;background:white;color:#172339;box-shadow:0 8px 40px #0004;font:16px/1.6 system-ui}button{font:inherit;cursor:pointer;margin:0 10px 10px 0;padding:6px 14px;border:1px solid #1c5eaf;border-radius:4px;background:#1c5eaf;color:white}button:hover{background:#174e92}button:focus-visible{outline:2px solid #1c5eaf;outline-offset:2px}label{display:block;margin:4px 0 10px;cursor:pointer}input{accent-color:#1c5eaf}textarea{box-sizing:border-box;width:100%;height:45vh;font:14px/1.5 monospace}p{white-space:pre-wrap;overflow-wrap:anywhere}</style><section role="status"><button id="close">关闭</button><button id="copy" hidden>复制mediainfo</button><label id="wrap-option" hidden><input id="wrap" type="checkbox" checked> 添加 [hide=mediainfo] 标签</label><p></p><textarea readonly hidden aria-label="mediainfo"></textarea></section>`;
+    shadow.innerHTML = `<style>:host{all:initial}[hidden]{display:none!important}section{position:fixed;z-index:2147483647;right:24px;bottom:24px;width:min(650px,90vw);max-height:80vh;overflow:auto;padding:20px;border:1px solid #aab5c7;border-radius:12px;background:white;color:#172339;box-shadow:0 8px 40px #0004;font:16px/1.6 system-ui}button{font:inherit;cursor:pointer;margin:0 10px 10px 0;padding:6px 14px;border:1px solid #1c5eaf;border-radius:4px;background:#1c5eaf;color:white}button:hover{background:#174e92}button:focus-visible{outline:2px solid #1c5eaf;outline-offset:2px}label{display:block;margin:4px 0 10px;cursor:pointer}input{accent-color:#1c5eaf}textarea{box-sizing:border-box;width:100%;height:45vh;font:14px/1.5 monospace}p{white-space:pre-wrap;overflow-wrap:anywhere}#copy-status{display:block;height:1.6em;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1c5eaf}</style><section role="status"><button id="close">关闭</button><button id="copy" hidden>复制mediainfo</button><label id="wrap-option" hidden><input id="wrap" type="checkbox" checked> 添加 [hide=mediainfo] 标签</label><p id="read-status"></p><output id="copy-status" role="status" aria-live="polite"></output><textarea readonly hidden aria-label="mediainfo"></textarea></section>`;
     shadow.getElementById('close').onclick = () => host.remove();
-    const status = shadow.querySelector('p'), area = shadow.querySelector('textarea');
+    const status = shadow.getElementById('read-status'), copyStatus = shadow.getElementById('copy-status'), area = shadow.querySelector('textarea');
     let report = '';
     const renderReport = () => { area.value = shadow.getElementById('wrap').checked ? `[hide=mediainfo]\n${report}\n[/hide]` : report; };
-    shadow.getElementById('wrap').onchange = renderReport;
+    shadow.getElementById('wrap').onchange = () => { renderReport(); copyStatus.textContent = ''; };
     shadow.getElementById('copy').onclick = async () => {
       renderReport();
       const text = area.value;
@@ -93,10 +93,10 @@
       } catch {
         area.value = text; area.focus(); area.select();
         try { if (!document.execCommand('copy')) throw new Error(); }
-        catch { status.textContent = '请按 Ctrl+C 复制已选中的内容。'; return; }
+        catch { copyStatus.textContent = '请按 Ctrl+C 复制已选中的内容。'; return; }
       }
       renderReport();
-      status.textContent = '已复制mediainfo，可粘贴到发布页面。';
+      copyStatus.textContent = '已复制mediainfo，可粘贴到发布页面。';
     };
     return {show(text) { status.textContent = text; }, info(text) { report = text; renderReport(); area.hidden = false; shadow.getElementById('copy').hidden = false; shadow.getElementById('wrap-option').hidden = false; }};
   }

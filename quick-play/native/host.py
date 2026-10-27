@@ -10,6 +10,7 @@ import time
 
 CONFIG = Path(__file__).with_name('config.json')
 CACHE = Path(__file__).with_name('path-cache.sqlite3')
+MEDIAINFO_ARGS = ('--Language=en',)
 MEDIA = {'.mkv', '.mp4', '.avi', '.mov', '.m2ts', '.ts', '.wmv', '.flv', '.webm', '.mpg', '.mpeg', '.m4v'}
 
 
@@ -190,11 +191,11 @@ def handle(message):
         return {'ok': True, 'path': str(path)}
     file_stat, tool_stat = path.stat(), Path(executable).stat()
     report_key = json.dumps([str(path), file_stat.st_size, file_stat.st_mtime_ns,
-                             executable, tool_stat.st_size, tool_stat.st_mtime_ns, '--Language=raw --Full'])
+                             executable, tool_stat.st_size, tool_stat.st_mtime_ns, MEDIAINFO_ARGS])
     cached_report = cached_text('reports', report_key)
     if cached_report:
         return {'ok': True, 'path': str(path), 'text': cached_report}
-    result = subprocess.run([executable, '--Language=raw', '--Full', str(path)], capture_output=True,
+    result = subprocess.run([executable, *MEDIAINFO_ARGS, str(path)], capture_output=True,
                             timeout=40, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     if result.returncode:
         raise ValueError('MediaInfo 读取失败，请检查是否配置了 CLI 版本')

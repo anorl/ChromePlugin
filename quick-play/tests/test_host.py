@@ -112,9 +112,14 @@ class HostTests(unittest.TestCase):
         exe = self.root / 'MediaInfo.exe'
         exe.touch()
         config = {'roots': [str(self.root)], 'mediainfo': str(exe)}
+        file_stat, tool_stat = path.stat(), exe.stat()
+        old_key = json.dumps([str(path), file_stat.st_size, file_stat.st_mtime_ns,
+                              str(exe), tool_stat.st_size, tool_stat.st_mtime_ns, '--Language=raw --Full'])
+        host.cached_text('reports', old_key, 'obsolete raw report')
         with patch.object(host, 'load_config', return_value=config), patch.object(host.subprocess, 'run') as run:
             run.return_value = subprocess.CompletedProcess([], 0, 'General\n电影'.encode('utf-8'), b'')
             self.assertEqual(host.handle({'action': 'info', 'filename': path.name})['text'], 'General\n电影')
+            self.assertEqual(run.call_args.args[0], [str(exe), '--Language=en', str(path)])
             self.assertEqual(host.handle({'action': 'info', 'filename': path.name})['text'], 'General\n电影')
             self.assertEqual(run.call_count, 1)
             path.write_bytes(b'changed-file')

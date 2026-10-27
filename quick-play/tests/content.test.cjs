@@ -42,10 +42,15 @@ test('copy mediainfo wraps by default, supports raw text, and preserves wrapping
   const option = shadow.getElementById('wrap');
   const copy = shadow.getElementById('copy');
   const area = shadow.querySelector('textarea');
+  const readStatus = shadow.getElementById('read-status');
+  const initialStatus = readStatus.textContent;
+  assert.match(initialStatus, /已读取：[\s\S]*D:\\Movie.mkv/);
   assert.equal(option.checked, true);
   assert.equal(area.value, '[hide=mediainfo]\nGeneral\nVideo\n[/hide]');
   copy.click(); await new Promise(setImmediate);
   assert.equal(copied, '[hide=mediainfo]\nGeneral\nVideo\n[/hide]');
+  assert.equal(readStatus.textContent, initialStatus);
+  assert.match(shadow.getElementById('copy-status').textContent, /已复制mediainfo/);
   assert.equal(area.value, '[hide=mediainfo]\nGeneral\nVideo\n[/hide]');
   option.click();
   assert.equal(area.value, 'General\nVideo');
@@ -61,6 +66,7 @@ test('copy mediainfo wraps by default, supports raw text, and preserves wrapping
   p.document.execCommand = () => false;
   copy.click(); await new Promise(setImmediate);
   assert.equal(area.value, '[hide=mediainfo]\nGeneral\nVideo\n[/hide]');
+  assert.equal(readStatus.textContent, initialStatus);
   copy.click(); await new Promise(setImmediate);
   assert.equal(area.value, '[hide=mediainfo]\nGeneral\nVideo\n[/hide]');
 });
