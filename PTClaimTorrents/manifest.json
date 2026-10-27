@@ -1,13 +1,25 @@
 {
   "manifest_version": 3,
   "name": "PT 种子认领助手",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "在 PTerClub 用户做种列表中，按页面交互顺序逐个认领种子。",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["https://pterclub.net/*"],
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
   "action": {
     "default_title": "PT 种子认领助手",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
   },
   "content_scripts": [
     {

@@ -1,13 +1,25 @@
 {
   "manifest_version": 3,
   "name": "自动打开并感谢",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "按设定的 page 范围访问可配置的列表页模板，依次打开每个 details.php?id=...，自动点击“说谢谢”后立即关闭；带访问日志与面板控制/状态显示。",
   "permissions": ["tabs", "scripting", "storage"],
   "host_permissions": ["https://*/", "http://*/"],
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "自动打开并感谢"
+    "default_title": "自动打开并感谢",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"

@@ -43,7 +43,7 @@
 
 ## 自动打开并感谢
 
-目录：[auto-thanks](auto-thanks/)
+目录：[auto-thanks](auto-thanks/) · [详细说明](auto-thanks/README.md)
 
 按配置的页码范围遍历种子列表，依次打开详情页、点击“说谢谢”并关闭详情页。提供进度统计、日志和停止按钮。
 
