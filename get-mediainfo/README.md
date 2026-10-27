@@ -10,7 +10,7 @@ MediaInfo 窗口中的“已读取”路径说明在复制后保持不变，复�
 
 已安装旧版时，先移除旧扩展，再加载本目录。保留 `native/config.json` 和缓存文件可继续使用已有路径、默认目录与程序设置。更名后本地助手也需要从新目录重新注册；扩展清单中的固定公钥使后续移动目录或重新加载时保持相同 ID，请保留该字段。
 
-1. 在 `chrome://extensions` 或 `edge://extensions` 开启开发者模式，选择“加载已解压的扩展程序”，加载本目录 `get-mediainfo`。图标为“播”字。
+1. 在 `chrome://extensions` 或 `edge://extensions` 开启开发者模式，选择“加载已解压的扩展程序”，加载本目录 `get-mediainfo`。图标为蓝底白色“M”。
 2. 复制扩展 ID。在 PowerShell 运行以下完整路径命令（无需先切换目录；如移动了项目，请修改脚本路径）：
 
    ```powershell

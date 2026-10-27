@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "获取mediainfo",
   "short_name": "Get MediaInfo",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "在 PT 种子详情页快捷调用本地 PotPlayer，读取并复制 MediaInfo。",
   "permissions": [
     "nativeMessaging"
