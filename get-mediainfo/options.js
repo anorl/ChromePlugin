@@ -1,9 +1,8 @@
 const $ = id => document.getElementById(id);
-$('install').textContent = `powershell -NoProfile -ExecutionPolicy Bypass -File "D:\\PX\\code\\ChromePlugin\\get-mediainfo\\native\\install.ps1" -ExtensionId ${chrome.runtime.id}`;
 let defaultRow;
 function syncDefault() {
   const rows = [...$('paths').children];
-  if (!rows.includes(defaultRow)) defaultRow = rows.find(row => /(?:^|[\\/])WD12T-2(?:[\\/]|$)/i.test(row.querySelector('.path-input').value)) || rows[0];
+  if (!rows.includes(defaultRow)) defaultRow = rows[0];
   for (const row of rows) {
     const selected = row === defaultRow;
     row.querySelector('input[type="radio"]').checked = selected;
@@ -15,7 +14,7 @@ function addPath(root = '') {
   row.className = 'path-row';
   const input = document.createElement('input');
   input.type = 'text'; input.className = 'path-input';
-  input.value = root; input.placeholder = '\\\\192.168.12.20\\data\\sda';
+  input.value = root; input.placeholder = '例如 D:\\Videos 或 \\\\NAS\\Videos';
   input.required = true; input.setAttribute('aria-label', '视频目录');
   const label = document.createElement('label');
   label.className = 'default-choice';
@@ -36,6 +35,7 @@ function showConfig(config) {
   $('mediainfo').value = config.mediainfo || '';
   $('paths').replaceChildren();
   (config.roots || []).forEach(addPath);
+  if (!$('paths').children.length) addPath();
   defaultRow = [...$('paths').children].find(row => row.querySelector('.path-input').value === config.defaultRoot);
   syncDefault();
 }
@@ -46,7 +46,7 @@ async function request(message) {
     if (!result?.ok) throw new Error(result?.error || '没有响应');
     if (result.config) showConfig(result.config);
     $('status').textContent = message.action === 'configure' ? '配置已保存。刷新 PT 详情页即可使用。' : '本地助手已连接，已读取当前配置。';
-  } catch (e) { $('status').textContent = e.message; }
+  } catch (e) { $('status').textContent = e.message; $('setup').open = true; }
 }
 $('load').onclick = () => request({action: 'status'});
 $('add').onclick = () => addPath();

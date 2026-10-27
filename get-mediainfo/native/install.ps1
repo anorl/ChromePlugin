@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory=$true)][ValidatePattern('^[a-p]{32}$')][string]$ExtensionId,
+    [ValidatePattern('^[a-p]{32}$')][string]$ExtensionId = '',
     [string]$PythonPath = '',
     [switch]$Uninstall
 )
@@ -10,6 +10,14 @@ if ($Uninstall) {
     foreach ($key in $keys) { if (Test-Path -LiteralPath $key) { Remove-Item -LiteralPath $key } }
     Write-Host 'Native host registration removed. Configuration files retained.'
     return
+}
+if (!$ExtensionId) {
+    $extensionManifest = Get-Content -LiteralPath (Join-Path (Split-Path $PSScriptRoot -Parent) 'manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if (!$extensionManifest.key) { throw 'The extension manifest key is missing. Supply -ExtensionId explicitly.' }
+    $hashAlgorithm = [Security.Cryptography.SHA256]::Create()
+    try { $digest = $hashAlgorithm.ComputeHash([Convert]::FromBase64String($extensionManifest.key)) }
+    finally { $hashAlgorithm.Dispose() }
+    $ExtensionId = -join ($digest[0..15] | ForEach-Object { [char](97 + ($_ -shr 4)); [char](97 + ($_ -band 15)) })
 }
 if (!$PythonPath) { $PythonPath = (Get-Command python.exe -ErrorAction Stop).Source }
 $PythonPath = (Resolve-Path -LiteralPath $PythonPath).Path
@@ -30,3 +38,4 @@ foreach ($key in $keys) {
     Set-Item -LiteralPath $key -Value $manifestPath
 }
 Write-Host 'Installed for current-user Chrome and Edge. Open extension settings to configure media paths.'
+Write-Host "Extension ID: $ExtensionId"

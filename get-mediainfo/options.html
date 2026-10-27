@@ -3,8 +3,20 @@
 <style>body{font:17px/1.7 system-ui;color:#20314b;background:#f3f6fb;min-width:480px;margin:0}main{max-width:740px;margin:auto;padding:24px}h1{font-size:25px}label{display:block;margin-top:16px}input,textarea{box-sizing:border-box;width:100%;padding:10px;font:16px/1.6 system-ui;border:1px solid #b9c6da;border-radius:6px}button{font:17px system-ui;padding:10px 18px;margin:18px 8px 0 0;cursor:pointer}p,code{overflow-wrap:anywhere;white-space:pre-wrap}small{display:block;color:#52617a}</style>
 <style>.path-row{display:flex;align-items:center;gap:12px;margin:10px 0}.path-input{flex:1;min-width:0;background:#fff}.default-choice{display:inline-flex;align-items:center;gap:5px;margin:0;white-space:nowrap;cursor:pointer}.default-choice input{width:auto;margin:0;accent-color:#1c5eaf}.path-row button{margin:0;padding:8px;font-size:15px;white-space:nowrap}.is-default .path-input{border-color:#1c5eaf;background:#edf4ff}</style>
 <main><h1>获取mediainfo</h1><p>在 PT 详情页点击“播放视频”打开本地 PotPlayer，或点击“获取mediainfo”读取并复制 MediaInfo。</p>
-<details><summary>首次安装本地助手</summary><p>先在 Chrome / Edge 的扩展管理页加载 get-mediainfo 文件夹。下面已填入本扩展 ID 和当前项目的脚本完整路径，可直接在 PowerShell 运行，无需先切换目录：</p><code id="install"></code><p>如果移动了扩展文件夹，请替换命令中的脚本路径。助手需要 Python 3.10+。安装完成后点击“读取配置 / 检查连接”。详细说明位于 README.md。</p></details>
-<form id="form"><label>PotPlayer 程序路径<input id="potplayer" placeholder="C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe" required></label>
+<details id="setup"><summary>安装与配置指南（首次使用请展开）</summary><ol>
+<li>在 Chrome / Edge 扩展管理页开启开发者模式，选择“加载已解压的扩展程序”，加载下载的 <code>get-mediainfo</code> 文件夹。</li>
+<li>安装 <a href="https://www.python.org/downloads/windows/" target="_blank" rel="noreferrer">Python 3.10 或更新版本</a>。安装后在 PowerShell 运行 <code>python --version</code>，确认命令可用且版本不低于 3.10；如安装器提供 Add Python to PATH 选项，可勾选它。</li>
+<li>在文件资源管理器中打开你下载的插件文件夹，进入 <code>native</code>，双击 <code>install.cmd</code>。它会自动定位脚本目录、识别扩展 ID，并为当前用户注册本地助手，无需手填绝对路径或扩展 ID。</li>
+<li>安装完成后点击本页“读取配置 / 检查连接”，检查下方预填的程序路径，填写自己的视频目录，选中一个默认目录后保存。程序安装位置不同时可直接修改路径。</li>
+<li>刷新 PT 种子详情页，即可使用“获取mediainfo”和“播放视频”。移动插件文件夹后重新加载扩展并再次双击 <code>native\install.cmd</code>。</li>
+</ol><p>助手目前支持 Windows；只读取信息时配置 MediaInfo CLI 即可，播放视频时再配置 PotPlayer。卸载助手时，在 <code>native</code> 文件夹打开 PowerShell，运行 <code>powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall</code>。</p></details>
+<form id="form"><label>PotPlayer 程序路径（播放视频时需要）<input id="potplayer" placeholder="填写 PotPlayer 程序的完整路径"></label>
 <p>视频目录</p><small>每行一个路径，在右侧选中默认目录。播放和读取信息只搜索该目录，修改后点击“保存配置”。</small><div id="paths"></div><button type="button" id="add">添加路径</button>
-<label>MediaInfo 程序路径（选填）<input id="mediainfo" placeholder="D:\MediaInfo\MediaInfo.exe"></label><small>已预填本机 CLI 路径。不填写也可以使用 PotPlayer 播放。</small>
+<label>MediaInfo CLI 程序路径（获取信息时需要）<input id="mediainfo" placeholder="填写解压后的 MediaInfo.exe 完整路径"></label>
+<details id="mediainfo-help"><summary>MediaInfo CLI 下载与配置</summary><ol>
+<li>打开 <a href="https://mediaarea.net/en/MediaInfo/Download/Windows" target="_blank" rel="noreferrer">MediaInfo 官方 Windows 下载页</a>，选择与你的电脑架构对应的 <strong>CLI（Command Line Interface）</strong>，不要选择 GUI 或 DLL。普通 Intel / AMD 64 位电脑选择 Intel 64 bit 的 CLI。</li>
+<li>将下载的 ZIP 压缩包全部解压到一个固定目录。CLI 版解压即可使用，可以与图形界面版共存。</li>
+<li>将解压后 <code>MediaInfo.exe</code> 的完整路径填入上方输入框，点击“保存配置”。要检查版本，可在 PowerShell 先输入 <code>&amp;</code> 和一个空格，将 exe 文件拖入窗口，再加一个空格和 <code>--Version</code> 运行；正确版本会输出 <code>MediaInfo Command line</code>。</li>
+<li>回到 PT 详情页点击“获取mediainfo”，再点“复制mediainfo”粘贴到发布页。需要站点隐藏标签时，保持“添加 [hide=mediainfo] 标签”勾选。</li>
+</ol></details>
 <button type="submit">保存配置</button><button type="button" id="load">读取配置 / 检查连接</button></form><p id="status" role="status"></p></main><script src="options.js"></script></html>

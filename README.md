@@ -8,8 +8,7 @@
 
 在 PT 种子详情页增加“播放视频”和“获取mediainfo”按钮。可读取并复制 MediaInfo，也可调用本地 PotPlayer 播放视频，支持默认视频目录、查找缓存及 `[hide=mediainfo]` 标签。
 
-- **安装**：在 Chrome / Edge 扩展管理页开启开发者模式，加载 `get-mediainfo` 目录，再按详细说明安装本插件的 Windows 本地助手。
-- **配置**：需要 Python 3.10+ 和 PotPlayer；获取媒体信息还需 MediaInfo CLI。填写程序路径、本机或 NAS 视频目录，并选中默认目录。
+- **安装与配置**：加载 `get-mediainfo` 目录后点击扩展图标，按设置页的“安装与配置指南”操作；该页面包含本地助手安装方式及 MediaInfo CLI 下载与配置教程。
 - **使用**：刷新种子详情页，点击播放或获取信息按钮。修改目录后保存配置即可。
 
 ## QB 一键辅种

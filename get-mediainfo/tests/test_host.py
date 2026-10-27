@@ -150,9 +150,7 @@ class HostTests(unittest.TestCase):
     def test_defaults_and_existing_config_precedence(self):
         with patch.object(host, 'CONFIG', self.root / 'config.json'):
             config = host.load_config()
-            self.assertEqual(len(config['roots']), 6)
-            self.assertEqual(config['roots'][0], r'\\192.168.12.20\data\sda')
-            self.assertEqual(config['defaultRoot'], r'\\192.168.12.20\data\WD12T-2\down')
+            self.assertEqual(config, {'potplayer': r'C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe', 'mediainfo': r'D:\MediaInfo\MediaInfo.exe', 'roots': []})
             host.CONFIG.write_text(json.dumps({'roots': [str(self.root)], 'potplayer': ''}), encoding='utf-8')
             self.assertEqual(host.load_config(), {'roots': [str(self.root)], 'potplayer': '', 'defaultRoot': str(self.root)})
 
@@ -180,8 +178,8 @@ class HostTests(unittest.TestCase):
                 host.handle({'action': 'play', 'filename': 'only-on-first.mkv'})
 
     def test_legacy_default_and_invalid_selection(self):
-        config = {'roots': ['D:\\sda', 'D:\\WD12T-2\\down']}
-        self.assertEqual(host.default_root(config), 'D:\\WD12T-2\\down')
+        config = {'roots': ['D:\\Movies', 'E:\\Series']}
+        self.assertEqual(host.default_root(config), 'D:\\Movies')
         config['defaultRoot'] = 'D:\\removed'
         with self.assertRaisesRegex(ValueError, '重新选择'):
             host.default_root(config)

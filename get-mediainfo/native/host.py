@@ -25,9 +25,6 @@ def default_root(config):
                 if PureWindowsPath(selected) == PureWindowsPath(root):
                     return root
         raise ValueError('默认视频目录已失效，请在设置中重新选择并保存')
-    for root in roots:
-        if any(part.upper() == 'WD12T-2' for part in PureWindowsPath(root).parts):
-            return root
     return roots[0]
 
 
