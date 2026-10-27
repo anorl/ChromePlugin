@@ -1,6 +1,6 @@
-# 快捷播放
+# 获取mediainfo（Get MediaInfo）
 
-独立的 Chrome / Edge MV3 扩展。PT 详情页的“种子文件”旁显示蓝底白字的 **播 · 快捷播放** 和 **获取mediainfo**。支持直接显示视频文件名、NexusPHP 内联列表和文件列表弹窗。列表按页面顺序选第一个支持的视频，跳过字幕、图片等文件。
+独立的 Chrome / Edge MV3 扩展，目录名为 `get-mediainfo`。PT 详情页的“种子文件”旁显示蓝底白字的 **播 · 播放视频** 和 **获取mediainfo**。支持直接显示视频文件名、NexusPHP 内联列表和文件列表弹窗。列表按页面顺序选第一个支持的视频，跳过字幕、图片等文件。
 
 PTerClub 使用弹窗展示文件列表：点击扩展按钮会使用当前站点登录状态直接读取文件列表，无需先打开弹窗；手动打开“种子文件”弹窗时，弹窗内也会提供播放与获取信息按钮。关闭弹窗后，本页已识别的文件名仍可使用，刷新页面后重新读取。
 
@@ -8,11 +8,13 @@ MediaInfo 窗口中的“已读取”路径说明在复制后保持不变，复�
 
 ## 安装（Windows）
 
-1. 在 `chrome://extensions` 或 `edge://extensions` 开启开发者模式，选择“加载已解压的扩展程序”，加载本目录 `quick-play`。图标为“播”字。
+已安装旧版时，先移除旧扩展，再加载本目录。保留 `native/config.json` 和缓存文件可继续使用已有路径、默认目录与程序设置。更名后本地助手也需要从新目录重新注册；扩展清单中的固定公钥使后续移动目录或重新加载时保持相同 ID，请保留该字段。
+
+1. 在 `chrome://extensions` 或 `edge://extensions` 开启开发者模式，选择“加载已解压的扩展程序”，加载本目录 `get-mediainfo`。图标为“播”字。
 2. 复制扩展 ID。在 PowerShell 运行以下完整路径命令（无需先切换目录；如移动了项目，请修改脚本路径）：
 
    ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File "D:\PX\code\ChromePlugin\quick-play\native\install.ps1" -ExtensionId 这里替换为扩展ID
+   powershell -NoProfile -ExecutionPolicy Bypass -File "D:\PX\code\ChromePlugin\get-mediainfo\native\install.ps1" -ExtensionId 这里替换为扩展ID
    ```
 
    需要 Python 3.10+。如 `python.exe` 不是实际 Python，可加 `-PythonPath 'C:\Python314\python.exe'`。脚本为当前用户注册 Chrome 和 Edge 本地消息助手，无需管理员权限。若系统阻止脚本执行，可只对这次进程使用 `powershell -NoProfile -ExecutionPolicy Bypass -File .\native\install.ps1 -ExtensionId 你的扩展ID`。
@@ -54,8 +56,8 @@ MediaInfo 窗口中的“已读取”路径说明在复制后保持不变，复�
 ## 本地验证
 
 ```powershell
-python -m unittest discover -s quick-play/tests -p "test_*.py"
-cd quick-play
+python -m unittest discover -s get-mediainfo/tests -p "test_*.py"
+cd get-mediainfo
 npm install
 npm test
 ```

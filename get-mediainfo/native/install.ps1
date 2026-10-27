@@ -4,7 +4,7 @@ param(
     [switch]$Uninstall
 )
 $ErrorActionPreference = 'Stop'
-$hostName = 'com.px.quick_play'
+$hostName = 'com.px.get_mediainfo'
 $keys = @("HKCU:\Software\Google\Chrome\NativeMessagingHosts\$hostName", "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\$hostName")
 if ($Uninstall) {
     foreach ($key in $keys) { if (Test-Path -LiteralPath $key) { Remove-Item -LiteralPath $key } }
@@ -23,7 +23,7 @@ $utf8 = New-Object System.Text.UTF8Encoding($false)
 $batch = "@echo off`r`nsetlocal DisableDelayedExpansion`r`nchcp 65001 >nul`r`n`"$PythonPath`" -u `"$(Join-Path $base 'host.py')`"`r`n"
 [IO.File]::WriteAllText($launcher, $batch, $utf8)
 $manifestPath = Join-Path $base "$hostName.json"
-$manifest = @{name=$hostName; description='Quick Play local media helper'; path=$launcher; type='stdio'; allowed_origins=@("chrome-extension://$ExtensionId/")}
+$manifest = @{name=$hostName; description='Get MediaInfo local media helper'; path=$launcher; type='stdio'; allowed_origins=@("chrome-extension://$ExtensionId/")}
 [IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json -Depth 4), $utf8)
 foreach ($key in $keys) {
     New-Item -Path $key -Force | Out-Null

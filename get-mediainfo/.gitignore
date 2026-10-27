@@ -1,7 +1,7 @@
 native/config.json
 native/config.tmp
 native/launch.cmd
-native/com.px.quick_play.json
+native/com.px.get_mediainfo.json
 native/path-cache.sqlite3*
 native/__pycache__/
 tests/__pycache__/

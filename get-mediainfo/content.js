@@ -1,6 +1,6 @@
 (() => {
-  if (window.__pxQuickPlay) return;
-  window.__pxQuickPlay = true;
+  if (window.__pxGetMediaInfo) return;
+  window.__pxGetMediaInfo = true;
   let cachedFile = '', pageKey = location.href;
   const fileLabel = /^(种子文件|種子檔案|種子文件|文件列表|Torrent files?)\s*[:：]?$/i;
   function checkPage() {
@@ -9,7 +9,7 @@
   const media = /(?:^|[\\/\s])?([^\r\n<>]+\.(?:mkv|mp4|avi|mov|m2ts|ts|wmv|flv|webm|mpg|mpeg|m4v))(?=$|\s)/i;
   function filename(cell) {
     const clone = cell.cloneNode(true);
-    clone.querySelectorAll('[data-quick-play],script,style').forEach(n => n.remove());
+    clone.querySelectorAll('[data-get-mediainfo],script,style').forEach(n => n.remove());
     clone.querySelectorAll('br').forEach(n => n.replaceWith('\n'));
     for (const line of clone.textContent.split(/\r?\n/)) {
       const match = line.trim().match(media);
@@ -75,7 +75,7 @@
   }
   function panel() {
     const host = document.createElement('div');
-    host.dataset.quickPlay = 'panel';
+    host.dataset.getMediainfo = 'panel';
     document.documentElement.append(host);
     const shadow = host.attachShadow({mode: 'closed'});
     shadow.innerHTML = `<style>:host{all:initial}[hidden]{display:none!important}section{position:fixed;z-index:2147483647;right:24px;bottom:24px;width:min(650px,90vw);max-height:80vh;overflow:auto;padding:20px;border:1px solid #aab5c7;border-radius:12px;background:white;color:#172339;box-shadow:0 8px 40px #0004;font:16px/1.6 system-ui}button{font:inherit;cursor:pointer;margin:0 10px 10px 0;padding:6px 14px;border:1px solid #1c5eaf;border-radius:4px;background:#1c5eaf;color:white}button:hover{background:#174e92}button:focus-visible{outline:2px solid #1c5eaf;outline-offset:2px}label{display:block;margin:4px 0 10px;cursor:pointer}input{accent-color:#1c5eaf}textarea{box-sizing:border-box;width:100%;height:45vh;font:14px/1.5 monospace}p{white-space:pre-wrap;overflow-wrap:anywhere}#copy-status{display:block;height:1.6em;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1c5eaf}</style><section role="status"><button id="close">关闭</button><button id="copy" hidden>复制mediainfo</button><label id="wrap-option" hidden><input id="wrap" type="checkbox" checked> 添加 [hide=mediainfo] 标签</label><p id="read-status"></p><output id="copy-status" role="status" aria-live="polite"></output><textarea readonly hidden aria-label="mediainfo"></textarea></section>`;
@@ -106,7 +106,7 @@
     try {
       let name = availableFile(cell);
       if (!name) {
-        const link = [...cell.querySelectorAll('a,button')].find(n => /查看列表|文件列表|show.*files/i.test(n.textContent) && !n.closest('[data-quick-play]'));
+        const link = [...cell.querySelectorAll('a,button')].find(n => /查看列表|文件列表|show.*files/i.test(n.textContent) && !n.closest('[data-get-mediainfo]'));
         if (link) {
           ui.show('正在读取文件列表…');
           const loaded = await loadPterList(link);
@@ -116,12 +116,12 @@
             const deadline = Date.now() + 12000;
             while (!name && Date.now() < deadline) {
               await new Promise(resolve => setTimeout(resolve, 250));
-              name = availableFile(cell.isConnected ? cell : document.querySelector('[data-quick-play-cell]') || cell);
+              name = availableFile(cell.isConnected ? cell : document.querySelector('[data-get-mediainfo-cell]') || cell);
             }
           }
         }
       }
-      if (!name) throw new Error('没有找到视频文件名。请手动打开文件列表，使用弹窗内的快捷播放按钮。');
+      if (!name) throw new Error('没有找到视频文件名。请手动打开文件列表，使用弹窗内的播放视频按钮。');
       ui.show(`正在查找本地文件：${name}`);
       const result = await chrome.runtime.sendMessage({action, filename: name});
       if (!result?.ok) throw new Error(result?.error || '本地助手没有响应');
@@ -131,11 +131,11 @@
     finally { button.disabled = false; }
   }
   function addButtons(cell, kind = 'buttons') {
-    if (cell.querySelector(`[data-quick-play="${kind}"]`)) return;
+    if (cell.querySelector(`[data-get-mediainfo="${kind}"]`)) return;
     const holder = document.createElement('span');
-    holder.dataset.quickPlay = kind;
+    holder.dataset.getMediainfo = kind;
     holder.style.cssText = 'display:inline-flex;gap:8px;margin:6px 12px;vertical-align:middle';
-    for (const [action, title] of [['play', '播 · 快捷播放'], ['info', '获取mediainfo']]) {
+    for (const [action, title] of [['play', '播 · 播放视频'], ['info', '获取mediainfo']]) {
       const button = document.createElement('button');
       button.type = 'button'; button.textContent = title;
       button.style.cssText = 'font:14px/1.5 system-ui;padding:4px 10px;cursor:pointer;background:#1c5eaf;color:#fff;border:1px solid #1c5eaf;border-radius:4px';
@@ -150,8 +150,8 @@
       const label = row.cells[0];
       if (!label || !fileLabel.test(label.textContent.trim())) continue;
       const cell = row.cells[1];
-      if (!cell || cell.querySelector('[data-quick-play="buttons"]')) continue;
-      cell.dataset.quickPlayCell = '';
+      if (!cell || cell.querySelector('[data-get-mediainfo="buttons"]')) continue;
+      cell.dataset.getMediainfoCell = '';
       addButtons(cell);
     }
     for (const content of dialogs()) {
@@ -161,7 +161,7 @@
   }
   let timer;
   const observer = new MutationObserver(records => {
-    if (records.every(r => r.target.closest?.('[data-quick-play]'))) return;
+    if (records.every(r => r.target.closest?.('[data-get-mediainfo]'))) return;
     clearTimeout(timer); timer = setTimeout(scan, 200);
   });
   observer.observe(document.documentElement, {childList: true, subtree: true});

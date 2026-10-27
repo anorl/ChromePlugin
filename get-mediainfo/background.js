@@ -1,4 +1,4 @@
-const HOST = 'com.px.quick_play';
+const HOST = 'com.px.get_mediainfo';
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
   const settings = sender.url === chrome.runtime.getURL('options.html');

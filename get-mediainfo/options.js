@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-$('install').textContent = `powershell -NoProfile -ExecutionPolicy Bypass -File "D:\\PX\\code\\ChromePlugin\\quick-play\\native\\install.ps1" -ExtensionId ${chrome.runtime.id}`;
+$('install').textContent = `powershell -NoProfile -ExecutionPolicy Bypass -File "D:\\PX\\code\\ChromePlugin\\get-mediainfo\\native\\install.ps1" -ExtensionId ${chrome.runtime.id}`;
 let defaultRow;
 function syncDefault() {
   const rows = [...$('paths').children];

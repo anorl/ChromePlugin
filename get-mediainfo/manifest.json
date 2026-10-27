@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "获取mediainfo",
+  "short_name": "Get MediaInfo",
+  "version": "1.0.9",
+  "description": "在 PT 种子详情页快捷调用本地 PotPlayer，读取并复制 MediaInfo。",
+  "permissions": [
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "获取mediainfo · 设置"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4sJcoyAAFL35JqR8jvCv+p7TFIctqrX0+V+jsQNWUfa8yUmcXFx5C6HeVvaIN4RStx6hPcz4C6EmFSdunCa0JE1O0FouTmjGabGZSbO9w5hQvfVj27EQZ9Z9njTNJ0PDXgyCDUMRH8PDzqyDkeGAmyGujEq/AgvQYWHublqPeFJOSyCwcM/2pYNatJcU73KSmqkahy2esyaz4nMB5lgT9sKzTDqpSa09O3S2o+V+05Q2ji7nojckG3K0/DNaHuAk24ceD6Lt72ZxxSSQoWOk47Fm1WnmuTt9EySbobQeqMfc18S+SzRWBfMZTmAK45YRL4uGz5rhkJXMvxB4Po9lpwIDAQAB"
+}

@@ -17,7 +17,7 @@ const tick = () => new Promise(resolve => setTimeout(resolve, 350));
 test('single filename, mutation idempotence, and play request', async t => {
   const p = page('<table><tr><td>种子文件</td><td>家族 2022.H264-HDSWEB.mp4</td></tr></table>');
   t.after(() => p.dom.window.close());
-  const buttons = p.document.querySelectorAll('[data-quick-play="buttons"] button');
+  const buttons = p.document.querySelectorAll('[data-get-mediainfo="buttons"] button');
   assert.equal(buttons.length, 2);
   assert.equal(buttons[1].textContent, '获取mediainfo');
   assert.equal(buttons[0].style.background, 'rgb(28, 94, 175)');
@@ -25,7 +25,7 @@ test('single filename, mutation idempotence, and play request', async t => {
   buttons[0].click();
   await tick();
   assert.deepEqual(JSON.parse(JSON.stringify(p.calls)), [{action: 'play', filename: '家族 2022.H264-HDSWEB.mp4'}]);
-  assert.equal(p.document.querySelectorAll('[data-quick-play="buttons"]').length, 1);
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="buttons"]').length, 1);
 });
 
 test('copy mediainfo wraps by default, supports raw text, and preserves wrapping in fallback', async t => {
@@ -36,7 +36,7 @@ test('copy mediainfo wraps by default, supports raw text, and preserves wrapping
   p.dom.window.Element.prototype.attachShadow = function (options) { shadow = attach.call(this, options); return shadow; };
   Object.defineProperty(p.dom.window, 'isSecureContext', {value: true});
   Object.defineProperty(p.dom.window.navigator, 'clipboard', {value: {writeText: async text => { copied = text; }}});
-  p.document.querySelectorAll('[data-quick-play="buttons"] button')[1].click();
+  p.document.querySelectorAll('[data-get-mediainfo="buttons"] button')[1].click();
   await tick();
   assert.equal(shadow.getElementById('copy').textContent, '复制mediainfo');
   const option = shadow.getElementById('wrap');
@@ -104,7 +104,7 @@ test('PTer retrieves actual modal endpoint without executing javascript href', a
     return {ok: true, text: async () => fileTable};
   };
   p.document.querySelector('a').onclick = () => clicks++;
-  p.document.querySelector('[data-quick-play="buttons"] button').click();
+  p.document.querySelector('[data-get-mediainfo="buttons"] button').click();
   await tick();
   assert.equal(fetched.url, 'https://pterclub.net/viewfilelist.php?id=903354');
   assert.equal(fetched.credentials, 'same-origin');
@@ -118,14 +118,14 @@ test('manual modal gets its own buttons and closing it preserves the selected fi
   t.after(() => p.dom.window.close());
   p.document.body.insertAdjacentHTML('beforeend', modal);
   await tick();
-  const buttons = p.document.querySelectorAll('[data-quick-play="dialog-buttons"] button');
+  const buttons = p.document.querySelectorAll('[data-get-mediainfo="dialog-buttons"] button');
   assert.equal(buttons.length, 2);
   buttons[1].click();
   await tick();
   assert.equal(p.calls[0].action, 'info');
   assert.equal(p.calls[0].filename, '格斗之王.Mortal.Kombat.1995.mkv');
   p.document.querySelector('.jconfirm').remove();
-  p.document.querySelector('[data-quick-play="buttons"] button').click();
+  p.document.querySelector('[data-get-mediainfo="buttons"] button').click();
   await tick();
   assert.equal(p.calls[1].filename, '格斗之王.Mortal.Kombat.1995.mkv');
 });
@@ -137,7 +137,7 @@ test('generic async expansion discovers a modal outside the seed-file cell', asy
     e.preventDefault();
     p.dom.window.setTimeout(() => p.document.body.insertAdjacentHTML('beforeend', modal), 30);
   };
-  p.document.querySelector('[data-quick-play="buttons"] button').click();
+  p.document.querySelector('[data-get-mediainfo="buttons"] button').click();
   await tick();
   assert.equal(p.calls[0].filename, '格斗之王.Mortal.Kombat.1995.mkv');
 });
@@ -146,10 +146,10 @@ test('an unrelated dialog and a login response cannot be mistaken for a file lis
   const p = page(seedRow + '<div role="dialog" aria-label="影片参数"><table><tr><td>other.mkv</td></tr></table></div>', 'https://pterclub.net/details.php?id=903354');
   t.after(() => p.dom.window.close());
   p.dom.window.fetch = async () => ({ok: true, text: async () => '<h1>请登录</h1><p>other.mkv</p>'});
-  p.document.querySelector('[data-quick-play="buttons"] button').click();
+  p.document.querySelector('[data-get-mediainfo="buttons"] button').click();
   await tick();
   assert.equal(p.calls.length, 0);
-  assert.equal(p.document.querySelectorAll('[data-quick-play="dialog-buttons"]').length, 0);
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="dialog-buttons"]').length, 0);
 });
 
 test('only extension settings can configure native host', () => {
