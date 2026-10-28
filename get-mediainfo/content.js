@@ -135,7 +135,7 @@
     const holder = document.createElement('span');
     holder.dataset.getMediainfo = kind;
     holder.style.cssText = 'display:inline-flex;gap:8px;margin:6px 12px;vertical-align:middle';
-    for (const [action, title] of [['play', '播 · 播放视频'], ['info', '获取mediainfo']]) {
+    for (const [action, title] of [['play', 'PotPlayer播放视频'], ['info', '获取mediainfo']]) {
       const button = document.createElement('button');
       button.type = 'button'; button.textContent = title;
       button.style.cssText = 'font:14px/1.5 system-ui;padding:4px 10px;cursor:pointer;background:#1c5eaf;color:#fff;border:1px solid #1c5eaf;border-radius:4px';
