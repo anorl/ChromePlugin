@@ -100,12 +100,13 @@
     };
     return {show(text) { status.textContent = text; }, info(text) { report = text; renderReport(); area.hidden = false; shadow.getElementById('copy').hidden = false; shadow.getElementById('wrap-option').hidden = false; }};
   }
-  async function run(cell, action, button) {
+  async function run(cell, action, button, selectedFile = null) {
     const ui = panel();
     button.disabled = true;
     try {
-      let name = availableFile(cell);
-      if (!name) {
+      let name = selectedFile === null ? availableFile(cell) : selectedFile;
+      if (name) cachedFile = name;
+      if (!name && selectedFile === null) {
         const link = [...cell.querySelectorAll('a,button')].find(n => /查看列表|文件列表|show.*files/i.test(n.textContent) && !n.closest('[data-get-mediainfo]'));
         if (link) {
           ui.show('正在读取文件列表…');
@@ -134,15 +135,36 @@
     if (cell.querySelector(`[data-get-mediainfo="${kind}"]`)) return;
     const holder = document.createElement('span');
     holder.dataset.getMediainfo = kind;
-    holder.style.cssText = 'display:inline-flex;gap:8px;margin:6px 12px;vertical-align:middle';
+    const perFile = kind === 'file-buttons';
+    holder.style.cssText = perFile
+      ? 'display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;flex-shrink:0;max-width:100%;align-self:center'
+      : 'display:inline-flex;gap:8px;margin:6px 12px;vertical-align:middle';
     for (const [action, title] of [['play', 'PotPlayer播放视频'], ['info', '获取mediainfo']]) {
       const button = document.createElement('button');
       button.type = 'button'; button.textContent = title;
       button.style.cssText = 'font:14px/1.5 system-ui;padding:4px 10px;cursor:pointer;background:#1c5eaf;color:#fff;border:1px solid #1c5eaf;border-radius:4px';
-      button.addEventListener('click', () => run(cell, action, button));
+      if (perFile) button.style.cssText += ';font-size:12px;padding:2px 6px;white-space:nowrap';
+      button.addEventListener('click', () => run(cell, action, button, perFile ? filename(cell) : null));
       holder.append(button);
     }
-    cell.prepend(holder);
+    if (perFile) {
+      const layout = document.createElement('div'), name = document.createElement('span');
+      layout.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px';
+      name.style.cssText = 'flex:1;min-width:0;overflow-wrap:anywhere';
+      while (cell.firstChild) name.append(cell.firstChild);
+      layout.append(name, holder);
+      cell.append(layout);
+    } else cell.prepend(holder);
+  }
+  function addFileButtons(content) {
+    let count = 0;
+    for (const row of content.querySelectorAll('table tr')) {
+      const cell = row.cells[0];
+      if (!cell || cell.querySelector('table') || !filename(cell)) continue;
+      addButtons(cell, 'file-buttons');
+      count++;
+    }
+    return count;
   }
   function scan() {
     checkPage();
@@ -150,13 +172,14 @@
       const label = row.cells[0];
       if (!label || !fileLabel.test(label.textContent.trim())) continue;
       const cell = row.cells[1];
-      if (!cell || cell.querySelector('[data-get-mediainfo="buttons"]')) continue;
+      if (!cell) continue;
       cell.dataset.getMediainfoCell = '';
-      addButtons(cell);
+      if (addFileButtons(cell)) cell.querySelectorAll('[data-get-mediainfo="buttons"]').forEach(n => n.remove());
+      else addButtons(cell);
     }
     for (const content of dialogs()) {
       const name = firstFile(content);
-      if (name) { cachedFile = name; addButtons(content, 'dialog-buttons'); }
+      if (name) { cachedFile = name; addFileButtons(content); }
     }
   }
   let timer;

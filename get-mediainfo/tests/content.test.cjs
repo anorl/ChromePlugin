@@ -113,12 +113,12 @@ test('PTer retrieves actual modal endpoint without executing javascript href', a
   assert.equal(p.calls[0].action, 'play');
 });
 
-test('manual modal gets its own buttons and closing it preserves the selected file', async t => {
+test('manual modal gets per-file buttons and closing it preserves the selected file', async t => {
   const p = page(seedRow, 'https://pterclub.net/details.php?id=903354');
   t.after(() => p.dom.window.close());
   p.document.body.insertAdjacentHTML('beforeend', modal);
   await tick();
-  const buttons = p.document.querySelectorAll('[data-get-mediainfo="dialog-buttons"] button');
+  const buttons = p.document.querySelectorAll('[data-get-mediainfo="file-buttons"] button');
   assert.equal(buttons.length, 2);
   buttons[1].click();
   await tick();
@@ -128,6 +128,54 @@ test('manual modal gets its own buttons and closing it preserves the selected fi
   p.document.querySelector('[data-get-mediainfo="buttons"] button').click();
   await tick();
   assert.equal(p.calls[1].filename, '格斗之王.Mortal.Kombat.1995.mkv');
+});
+
+test('each episode targets its own file even while another request is pending', async t => {
+  const p = page(seedRow);
+  t.after(() => p.dom.window.close());
+  p.dom.window.chrome.runtime.sendMessage = msg => {
+    p.calls.push(msg);
+    if (msg.filename === 'first.mkv') return new Promise(() => {});
+    return Promise.resolve({ok: true, path: 'D:\\second.mp4', text: 'General'});
+  };
+  p.document.body.insertAdjacentHTML('beforeend', modal.replace(fileTable, '<table><tr><th>路径</th><th>大小</th></tr><tr><td>first.mkv</td><td>1 GB</td></tr><tr><td>second.mp4</td><td>2 GB</td></tr><tr><td>cover.jpg</td><td>1 MB</td></tr></table>'));
+  await tick();
+  const holders = p.document.querySelectorAll('[data-get-mediainfo="file-buttons"]');
+  assert.equal(holders.length, 2);
+  assert.equal(holders[1].parentElement.lastElementChild, holders[1]);
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="dialog-buttons"]').length, 0);
+  const firstInfo = holders[0].querySelectorAll('button')[1];
+  const secondButtons = holders[1].querySelectorAll('button');
+  firstInfo.click();
+  assert.equal(firstInfo.disabled, true);
+  assert.equal(secondButtons[1].disabled, false);
+  secondButtons[1].click();
+  await tick();
+  secondButtons[0].click();
+  await tick();
+  assert.deepEqual(JSON.parse(JSON.stringify(p.calls)), [
+    {action: 'info', filename: 'first.mkv'},
+    {action: 'info', filename: 'second.mp4'},
+    {action: 'play', filename: 'second.mp4'}
+  ]);
+  assert.equal(secondButtons[1].disabled, false);
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="file-buttons"]').length, 2);
+});
+
+test('inline file list replaces shared buttons and supports newly added episodes', async t => {
+  const p = page('<table><tr><td>种子文件</td><td id="files"><table id="list"><tr><th>路径</th><th>大小</th></tr><tr><td>first.mkv</td><td>1 GB</td></tr><tr><td>sub.srt</td><td>1 KB</td></tr></table></td></tr></table>');
+  t.after(() => p.dom.window.close());
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="buttons"]').length, 0);
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="file-buttons"]').length, 1);
+  p.document.querySelector('#list tbody').insertAdjacentHTML('beforeend', '<tr><td>第二集.mp4</td><td>2 GB</td></tr>');
+  await tick();
+  const holders = p.document.querySelectorAll('[data-get-mediainfo="file-buttons"]');
+  assert.equal(holders.length, 2);
+  holders[1].querySelectorAll('button')[1].click();
+  await tick();
+  assert.equal(p.calls[0].filename, '第二集.mp4');
+  assert.equal(p.calls[0].action, 'info');
+  assert.equal(p.document.querySelectorAll('[data-get-mediainfo="file-buttons"]').length, 2);
 });
 
 test('generic async expansion discovers a modal outside the seed-file cell', async t => {
